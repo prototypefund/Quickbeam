@@ -27,8 +27,8 @@ func (m *Meeting) Yes() {
 
 func (m *Meeting) ToggleMute() {
 	p := m.b.Page
-	selMute := "[aria-label=\"Mute\""
-	selUnmute := "[aria-label=\"Unmute\""
+	selMute := "[aria-label=\"Mute\"]"
+	selUnmute := "[aria-label=\"Unmute\"]"
 	if ok, b, _ := p.Has(selMute); ok {
 		b.MustClick()
 	} else if ok, b, _ := p.Has(selUnmute); ok {
@@ -48,6 +48,8 @@ func (m *Meeting) ToggleRaiseHand() {
 }
 
 func (m *Meeting) Leave() {
-	// m.b.Page.MustElementR("[role=\"menuitem\"]", "/leave meeting/i").MustClick()
+	p := m.b.Page
+	p.MustElement("header [aria-label=\"Options\"]").MustClick()
+	p.MustElementR("[role=\"menuitem\"]", "Leave meeting").MustClick()
 	m.b.Page.Close()
 }

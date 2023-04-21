@@ -36,6 +36,9 @@ func handleCommand(command []string) error {
 		meeting.ToggleMute()
 	case "raiseHand":
 		meeting.ToggleRaiseHand()
+	case "leave":
+		meeting.Leave()
+		os.Exit(0)
 	}
 	return nil
 }
