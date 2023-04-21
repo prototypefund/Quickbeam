@@ -41,7 +41,10 @@ func handleCommand(command []string) error {
 }
 
 func main() {
-	rl, err := readline.New("> ")
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt: "> ",
+		HistoryFile: "./.quickbeam_history",
+	})
 	if err != nil {
 		panic(err)
 	}
