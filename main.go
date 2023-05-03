@@ -36,11 +36,24 @@ func handleCommand(command []string) error {
 		meeting.ToggleMute()
 	case "raiseHand":
 		meeting.ToggleRaiseHand()
+	case "activate":
+		meeting.Activate()
 	case "leave":
 		meeting.Leave()
 		os.Exit(0)
+	case "attendees":
+		for _, a := range meeting.GetAttendees() {
+			fmt.Println(a)
+		}
+		fmt.Println()
+	case "subscribe":
+		meeting.SubscribeAttendanceChange(attendanceChange)
 	}
 	return nil
+}
+
+func attendanceChange(_ *bbb.Meeting) {
+	fmt.Println("Change in attendance detected.")
 }
 
 func main() {
@@ -57,6 +70,7 @@ func main() {
 		line, err := rl.Readline()
 		if err != nil {
 			if err == io.EOF {
+				meeting.Leave()
 				fmt.Fprintf(rl.Stderr(), "Bye")
 				os.Exit(0)
 			} else {
@@ -72,5 +86,4 @@ func main() {
 			}
 		}
 	}
-	meeting.Leave()
 }
