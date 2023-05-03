@@ -1,3 +1,4 @@
 .direnv
 .quickbeam_history
-quickbeam
+/quickbeam
+/quickbeam-repl
