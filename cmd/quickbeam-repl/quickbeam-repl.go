@@ -11,10 +11,6 @@ import (
 	"github.com/chzyer/readline"
 )
 
-func handleExit() {
-	os.Exit(0)
-}
-
 var (
 	meeting *bbb.Meeting
 )
@@ -22,7 +18,7 @@ var (
 func handleCommand(command []string) error {
 	switch command[0] {
 	case "exit":
-		handleExit()
+		os.Exit(0)
 	case "open":
 		if len(command) != 2 {
 			return errors.New("Invalid number of arguments: need meeting url")
