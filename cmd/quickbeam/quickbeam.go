@@ -3,32 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"os"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
 	"github.com/sourcegraph/jsonrpc2"
 )
-
-type CalculatorService struct {}
-
-func (s *CalculatorService) Add(a, b int) int {
-	return a + b
-}
-
-func (s *CalculatorService) Div(a, b int) (int, error) {
-	if b == 0 {
-		return 0, errors.New("divide by zero")
-	}
-	return a/b, nil
-}
-
-type FileChannel struct {}
-
-func runRPC(channel io.ReadWriteCloser) interface{} {
-	return nil
-}
 
 type myReadWriteCloser struct {
 	in io.ReadCloser
@@ -54,7 +34,7 @@ func (s *myReadWriteCloser) Close() (err error) {
 }
 
 func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (result interface{}, err error) {
-	var params interface{}
+	var params map[string]interface{}
 	if req.Params != nil {
 		if err := json.Unmarshal(*req.Params, &params); err != nil {
 			return nil, err
