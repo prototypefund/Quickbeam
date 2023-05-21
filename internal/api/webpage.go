@@ -1,6 +1,8 @@
 package api
 
-import "git.sr.ht/~michl/quickbeam/internal/webpage"
+import (
+	"git.sr.ht/~michl/quickbeam/internal/webpage"
+)
 
 type WebpageId uint64
 
@@ -9,7 +11,15 @@ var (
 	lastId WebpageId = 0
 )
 
-func openWebpage(url string) (WebpageId, error) {
+type OpenWebpageReturn struct {
+	Id WebpageId `json:"id"`
+}
+
+type OpenWebpageArgument struct {
+	Url string  `json:"url"`
+}
+
+func openWebpage(arg OpenWebpageArgument) (OpenWebpageReturn, error) {
 	lastId++
-	return lastId, nil
+	return OpenWebpageReturn{lastId}, nil
 }

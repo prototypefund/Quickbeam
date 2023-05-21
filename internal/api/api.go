@@ -57,49 +57,71 @@ func dispatchAction(action string, params map[string]interface{}) (result interf
 
 type Dispatchable func(p interface{}) (interface{}, error)
 
-func dispatchFunc(f interface{}, paramsMap map[string]interface{}) (res interface {}, err error) {
+// getArgumentType returns the type of f's argument. It also checks whether f is dispatchable. This means, it accepts one single argument that is a struct and returns two arguments, a return value and an error. It returns an error if not.
+func getArgumentType(f interface{}) reflect.Type {
+	return reflect.ValueOf(f).Type().In(0)
+}
+
+func assertDispatchable(f interface{}) error {
 	funcVal := reflect.ValueOf(f)
 	if funcVal.Kind() != reflect.Func {
-		return nil, InternalDispatchError{"dispatchee is not a function"}
+		return InternalDispatchError{"dispatchee is not a function"}
 	}
 	funcType := funcVal.Type()
 	if funcType.NumIn() != 1 {
-		return nil, InternalDispatchError{"dispatchee does not accept exactly one argument"}
+		return InternalDispatchError{"dispatchee does not accept exactly one argument"}
 	}
-	paramsType := funcType.In(0)
-	if paramsKind := paramsType.Kind(); paramsKind != reflect.Struct {
-		return nil, InternalDispatchError{"dispatchee parameter is not a struct"}
+	if funcType.In(0).Kind() != reflect.Struct {
+		return InternalDispatchError{"dispatchee parameter is not a struct"}
 	}
 	if funcType.NumOut() != 2 {
-		return nil, InternalDispatchError{"dispatchee does not return exactly two values"}
+		return InternalDispatchError{"dispatchee does not return exactly two values"}
 	}
-	if funcType.Out(0).Kind() != reflect.Interface {
-		return nil, InternalDispatchError{"dispatchee's first return value is not an interface"}
+	if funcType.Out(0).Kind() != reflect.Struct {
+		return InternalDispatchError{"dispatchee's first return value is not a struct"}
 	}
 	errorInterface := reflect.TypeOf((*error)(nil)).Elem()
 	if !funcType.Out(1).Implements(errorInterface) {
-		return nil, InternalDispatchError{"dispatchee's second return value is not an error"}
+		return InternalDispatchError{"dispatchee's second return value is not an error"}
 	}
+	return nil
+}
 
-	paramsStruct := reflect.New(paramsType).Elem()
-	for k, v := range paramsMap {
-		field := paramsStruct.FieldByName(k)
+func newArgument(t reflect.Type, values map[string]interface{}) (res reflect.Value, err error) {
+	res = reflect.New(t)
+	dest := res.Elem()
+	for k, v := range values {
+		field := dest.FieldByName(k)
 		if !field.IsValid() {
-			return nil, InvalidArgumentError{paramsType, k}
+			return res, InvalidArgumentError{t, k}
 		}
 		if !field.CanSet() {
-			return nil, InternalDispatchError{fmt.Sprintf("cannot set field `%s`", k)}
+			return res, InternalDispatchError{fmt.Sprintf("cannot set field `%s`", k)}
 		}
 		val := reflect.ValueOf(v)
 		if val.Type() != field.Type() {
-			return nil, InvalidTypeError{paramsType, k, val.Type()}
+			return res, InvalidTypeError{t, k, val.Type()}
 		}
 		field.Set(val)
 	}
+	return res, nil
+}
 
-	results := funcVal.Call([]reflect.Value{paramsStruct})
+func dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
+	if err := assertDispatchable(f); err != nil {
+		return nil, err
+	}
+	argType := getArgumentType(f)
+	argPointer, err := newArgument(argType, arguments)
+	if err != nil {
+		return nil, err
+	}
+
+	results := reflect.ValueOf(f).Call([]reflect.Value{argPointer.Elem()})
 	res = results[0].Interface()
-	err = results[1].Interface().(error)
+	if !results[1].IsNil() {
+		return nil, results[1].Interface().(error)
+	}
 	return
 }
 
@@ -128,17 +150,7 @@ func Dispatch(method string, params map[string]interface{}) (result interface{},
 		}
 		return dispatchAction(action, ap)
 	case "webpage.open":
-		if params == nil {
-			return nil, ParamMissingError{}
-		}
-		u, ok := params["url"]
-		if !ok {
-			return nil, ParamMissingError{"url"}
-		}
-		url, ok := u.(string)
-		if ok {
-			return openWebpage(url)
-		}
+		return dispatchFunc(openWebpage, params)
 	}
 	return nil, errors.New("Unknown Method")
 }
