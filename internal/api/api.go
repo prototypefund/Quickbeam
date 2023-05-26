@@ -125,14 +125,14 @@ func dispatchFunc(f interface{}, arguments map[string]interface{}) (res interfac
 	return
 }
 
-func Dispatch(method string, params map[string]interface{}) (result interface{}, err error) {
+func Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
 	switch method {
 	case "ping":
 		return builtin.Ping()
 	case "version":
 		return builtin.GetVersion(), nil
 	case "call":
-		a, ok := params["action"]
+		a, ok := args["action"]
 		if !ok {
 			return nil, errors.New("Invalid call: action missing")
 		}
@@ -140,17 +140,19 @@ func Dispatch(method string, params map[string]interface{}) (result interface{},
 		if !ok {
 			return nil, errors.New("Invalid call: action not a string")
 		}
-		actionParams, ok := params["params"]
+		actionParams, ok := args["args"]
 		if !ok {
 			return nil, errors.New("Invalid call: params missing")
 		}
-		ap, ok := actionParams.(map[string]interface{})
+		ap, ok := actionParams.(DispatchArgs)
 		if !ok {
 			return nil, errors.New("Invalid call: action params not a struct")
 		}
 		return dispatchAction(action, ap)
 	case "webpage.open":
-		return dispatchFunc(openWebpage, params)
+		return dispatchFunc(openWebpage, args)
 	}
 	return nil, errors.New("Unknown Method")
 }
+
+type DispatchArgs map[string]interface{}
