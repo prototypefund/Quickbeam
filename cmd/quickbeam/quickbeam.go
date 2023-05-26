@@ -7,8 +7,13 @@ import (
 	"os"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
+	"git.sr.ht/~michl/quickbeam/internal/webpage/rod"
 	"github.com/sourcegraph/jsonrpc2"
 )
+
+var a api.Api = api.Api{
+	Web: rod.New(),
+}
 
 type myReadWriteCloser struct {
 	in io.ReadCloser
@@ -42,7 +47,7 @@ func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request
 	} else {
 		params = nil
 	}
-	return api.Dispatch(req.Method, params)
+	return a.Dispatch(req.Method, params)
 }
 
 func main() {

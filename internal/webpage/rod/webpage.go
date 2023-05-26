@@ -14,11 +14,16 @@ func New() *RodWebpage {
 	return &RodWebpage{}
 }
 
-func (b RodWebpage) New(url string) {
+func (b RodWebpage) Running() bool {
+	return b.browser != nil
+}
+
+func (b RodWebpage) Start() error {
 	path, _ := launcher.LookPath()
 	control := launcher.New().Bin(path).Headless(false).Devtools(false).Set("audio").Delete("mute-audio").Delete("disable-audio-input").Delete("disable-audio-output").MustLaunch()
 	b.browser = rod.New().ControlURL(control).MustConnect()
 	b.page = nil
+	return nil
 }
 
 func (b RodWebpage) Close() {
@@ -29,10 +34,11 @@ func (b RodWebpage) Close() {
 	b.page = nil
 }
 
-func (b RodWebpage) Navigate(url string) {
+func (b RodWebpage) Navigate(url string) error {
 	if b.browser != nil {
 		b.page = b.browser.MustPage(url)
 	}
+	return nil
 }
 
 func (b RodWebpage) Back() {

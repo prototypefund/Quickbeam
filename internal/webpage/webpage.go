@@ -2,7 +2,9 @@ package webpage
 
 type Webpage interface {
 	Close()
-	Navigate(url string)
+	Navigate(url string) error
 	Back()
 	Forward()
+	Start() error
+	Running() bool
 }

@@ -6,58 +6,11 @@ import (
 	"reflect"
 
 	"git.sr.ht/~michl/quickbeam/internal/api/builtin"
+	"git.sr.ht/~michl/quickbeam/internal/webpage"
 )
-
-var (
-	actions map[string]interface{} = map[string]interface{}{
-		"greet": greet,
-	}
-)
-
-type greetParams struct {
-	Name string `json:"name"`
-}
-
-func greet(p greetParams) (string, error) {
-	name := p.Name
-	return fmt.Sprintf("Hello, %s!", name), nil
-}
-
-type ArgumentError struct{
-	message string
-}
-
-func (e ArgumentError) Error() string {
-	return e.message
-}
-
-type ActionError struct{
-	message string
-}
-
-func (e ActionError) Error() string {
-	return e.message
-}
-
-type InternalDispatchError struct{
-	message string
-}
-
-func (e InternalDispatchError) Error() string {
-	return e.message
-}
-
-func dispatchAction(action string, params map[string]interface{}) (result interface{}, err error) {
-	act, ok := actions[action]
-	if !ok {
-		return nil, ActionError{"Action not available"}
-	}
-	return dispatchFunc(act, params)
-}
 
 type Dispatchable func(p interface{}) (interface{}, error)
 
-// getArgumentType returns the type of f's argument. It also checks whether f is dispatchable. This means, it accepts one single argument that is a struct and returns two arguments, a return value and an error. It returns an error if not.
 func getArgumentType(f interface{}) reflect.Type {
 	return reflect.ValueOf(f).Type().In(0)
 }
@@ -125,7 +78,11 @@ func dispatchFunc(f interface{}, arguments map[string]interface{}) (res interfac
 	return
 }
 
-func Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
+type Api struct {
+	Web webpage.Webpage
+}
+
+func (a Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
 	switch method {
 	case "ping":
 		return builtin.Ping()
@@ -149,8 +106,22 @@ func Dispatch(method string, args DispatchArgs) (result interface{}, err error) 
 			return nil, errors.New("Invalid call: action params not a struct")
 		}
 		return dispatchAction(action, ap)
-	case "webpage.open":
-		return dispatchFunc(openWebpage, args)
+	case "open":
+		if !a.Web.Running() {
+			err = a.Web.Start()
+			if err != nil {
+				return nil, err
+			}
+		}
+		u, ok := args["url"]
+		if !ok {
+			return nil, ParamMissingError{"url"}
+		}
+		url, ok := u.(string)
+		if !ok {
+			return nil, errors.New("url is not a string")
+		}
+		return nil, a.Web.Navigate(url)
 	}
 	return nil, errors.New("Unknown Method")
 }

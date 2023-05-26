@@ -39,3 +39,19 @@ func (e InvalidTypeError) Error() string {
 	}
 	return fmt.Sprintf("Wrong type for argument `%s`: expected %v, got %v", e.Key, fieldType, e.ValueType)
 }
+
+type ActionNotAvailableError struct {
+	Action string
+}
+
+func (e ActionNotAvailableError) Error() string {
+	return fmt.Sprintf("Action '%v' ist not available currently", e.Action)
+}
+
+type InternalDispatchError struct{
+	message string
+}
+
+func (e InternalDispatchError) Error() string {
+	return e.message
+}
