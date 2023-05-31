@@ -1,13 +1,13 @@
 package api
 
 import (
-	"git.sr.ht/~michl/quickbeam/internal/webpage"
+	"git.sr.ht/~michl/quickbeam/internal/web"
 )
 
 type WebpageId uint64
 
 var (
-	webpages = make(map[WebpageId] webpage.Webpage)
+	webpages = make(map[WebpageId] web.WebPage)
 	lastId WebpageId = 0
 )
 

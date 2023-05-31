@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
-	"git.sr.ht/~michl/quickbeam/internal/webpage/rod"
+	"git.sr.ht/~michl/quickbeam/internal/web/rod"
 	"github.com/sourcegraph/jsonrpc2"
 )
 

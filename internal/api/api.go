@@ -6,13 +6,13 @@ import (
 	"reflect"
 
 	"git.sr.ht/~michl/quickbeam/internal/api/builtin"
-	"git.sr.ht/~michl/quickbeam/internal/webpage"
+	"git.sr.ht/~michl/quickbeam/internal/web"
 )
 
-type Dispatchable func(p interface{}) (interface{}, error)
+type Dispatchable func(a Api, p interface{}) (interface{}, error)
 
-func getArgumentType(f interface{}) reflect.Type {
-	return reflect.ValueOf(f).Type().In(0)
+func argumentType(f interface{}, num int) reflect.Type {
+	return reflect.ValueOf(f).Type().In(num)
 }
 
 func assertDispatchable(f interface{}) error {
@@ -21,11 +21,11 @@ func assertDispatchable(f interface{}) error {
 		return InternalDispatchError{"dispatchee is not a function"}
 	}
 	funcType := funcVal.Type()
-	if funcType.NumIn() != 1 {
-		return InternalDispatchError{"dispatchee does not accept exactly one argument"}
+	if funcType.NumIn() < 1 {
+		return InternalDispatchError{"dispatchee does not accept at least one argument"}
 	}
 	if funcType.In(0).Kind() != reflect.Struct {
-		return InternalDispatchError{"dispatchee parameter is not a struct"}
+		return InternalDispatchError{"dispatchee does not accept struct as first parameter"}
 	}
 	if funcType.NumOut() != 2 {
 		return InternalDispatchError{"dispatchee does not return exactly two values"}
@@ -60,17 +60,38 @@ func newArgument(t reflect.Type, values map[string]interface{}) (res reflect.Val
 	return res, nil
 }
 
-func dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
+func numberOfArguments(f interface{}) int {
+	v := reflect.ValueOf(f)
+	t := v.Type()
+	return t.NumIn()
+}
+
+func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
 	if err := assertDispatchable(f); err != nil {
 		return nil, err
 	}
-	argType := getArgumentType(f)
+	numArgs := numberOfArguments(f)
+
+	argType := argumentType(f, 0)
 	argPointer, err := newArgument(argType, arguments)
 	if err != nil {
 		return nil, err
 	}
+	argList := []reflect.Value{argPointer.Elem()}
 
-	results := reflect.ValueOf(f).Call([]reflect.Value{argPointer.Elem()})
+	webpageType := reflect.TypeOf((*web.WebPage)(nil)).Elem()
+	for i := 1; i < numArgs; i++ {
+		t := argumentType(f, i)
+		switch t {
+		case reflect.TypeOf(a):
+			argList = append(argList, reflect.ValueOf(a))
+		case webpageType:
+			argList = append(argList, reflect.ValueOf(a.Web))
+		default:
+			return nil, InternalDispatchError{fmt.Sprintf("Unknown type for dependencie injection: %v", t)}
+		}
+	}
+	results := reflect.ValueOf(f).Call(argList)
 	res = results[0].Interface()
 	if !results[1].IsNil() {
 		return nil, results[1].Interface().(error)
@@ -79,21 +100,21 @@ func dispatchFunc(f interface{}, arguments map[string]interface{}) (res interfac
 }
 
 type Api struct {
-	Web webpage.Webpage
+	Web web.WebPage
 }
 
-func (a Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
+func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
 	switch method {
 	case "ping":
 		return builtin.Ping()
 	case "version":
 		return builtin.GetVersion(), nil
 	case "call":
-		a, ok := args["action"]
+		act, ok := args["action"]
 		if !ok {
 			return nil, errors.New("Invalid call: action missing")
 		}
-		action, ok := a.(string)
+		action, ok := act.(string)
 		if !ok {
 			return nil, errors.New("Invalid call: action not a string")
 		}
@@ -101,11 +122,12 @@ func (a Api) Dispatch(method string, args DispatchArgs) (result interface{}, err
 		if !ok {
 			return nil, errors.New("Invalid call: params missing")
 		}
-		ap, ok := actionParams.(DispatchArgs)
+		apMap, ok := actionParams.(map[string]interface{})
+		ap := DispatchArgs(apMap)
 		if !ok {
 			return nil, errors.New("Invalid call: action params not a struct")
 		}
-		return dispatchAction(action, ap)
+		return a.dispatchAction(action, ap)
 	case "open":
 		if !a.Web.Running() {
 			err = a.Web.Start()

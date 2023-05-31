@@ -1,10 +1,16 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+
+	"git.sr.ht/~michl/quickbeam/internal/bbb"
+	"git.sr.ht/~michl/quickbeam/internal/web"
+)
 
 var (
 	actions map[string]interface{} = map[string]interface{}{
 		"greet": greet,
+		"bbb/join": bbb.Join,
 	}
 )
 
@@ -12,15 +18,20 @@ type greetParams struct {
 	Name string `json:"name"`
 }
 
-func greet(p greetParams) (string, error) {
-	name := p.Name
-	return fmt.Sprintf("Hello, %s!", name), nil
+type greetReturn struct {
+	Greeting string
 }
 
-func dispatchAction(action string, params map[string]interface{}) (result interface{}, err error) {
+func greet(p greetParams, w web.WebPage, a *Api) (greetReturn, error) {
+	name := p.Name
+	greeting := fmt.Sprintf("Hello, %s!", name)
+	return greetReturn{greeting}, nil
+}
+
+func (a *Api) dispatchAction(action string, params map[string]interface{}) (result interface{}, err error) {
 	act, ok := actions[action]
 	if !ok {
 		return nil, ActionNotAvailableError{action}
 	}
-	return dispatchFunc(act, params)
+	return a.dispatchFunc(act, params)
 }
