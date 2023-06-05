@@ -7,7 +7,7 @@ import (
 type WebpageId uint64
 
 var (
-	webpages = make(map[WebpageId] web.WebPage)
+	webpages = make(map[WebpageId] web.Page)
 	lastId WebpageId = 0
 )
 

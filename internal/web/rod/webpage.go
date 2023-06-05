@@ -58,7 +58,7 @@ func (b *RodWebpage) Forward() {
 	}
 }
 
-func (b *RodWebpage) Root() web.WebNode {
+func (b *RodWebpage) Root() web.Node {
 	e := b.page.MustElement(":root")
 	return &RodNode{element: e,}
 }

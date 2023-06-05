@@ -22,7 +22,7 @@ type greetReturn struct {
 	Greeting string
 }
 
-func greet(p greetParams, w web.WebPage, a *Api) (greetReturn, error) {
+func greet(p greetParams, w web.Page, a *Api) (greetReturn, error) {
 	name := p.Name
 	greeting := fmt.Sprintf("Hello, %s!", name)
 	return greetReturn{greeting}, nil

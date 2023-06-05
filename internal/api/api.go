@@ -79,7 +79,7 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 	}
 	argList := []reflect.Value{argPointer.Elem()}
 
-	webpageType := reflect.TypeOf((*web.WebPage)(nil)).Elem()
+	webpageType := reflect.TypeOf((*web.Page)(nil)).Elem()
 	for i := 1; i < numArgs; i++ {
 		t := argumentType(f, i)
 		switch t {
@@ -100,7 +100,7 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 }
 
 type Api struct {
-	Web web.WebPage
+	Web web.Page
 }
 
 func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
