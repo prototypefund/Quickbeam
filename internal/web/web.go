@@ -12,19 +12,25 @@ type Page interface {
 
 type SubtreeChange interface {
 	isSubtreeChange()
-	Node() Node
+	//Node() Node
 }
 
 func (_ *NodeAdded) isSubtreeChange() {}
-func (c *NodeAdded) Node() Node {return c.node}
+//func (c *NodeAdded) Node() Node {return c.node}
 type NodeAdded struct {
-	node Node
+	Data interface{}
 }
 
 func (_ *NodeRemoved) isSubtreeChange() {}
-func (c *NodeRemoved) Node() Node {return c.node}
+//func (c *NodeRemoved) Node() Node {return c.node}
 type NodeRemoved struct {
-	node Node
+	Data interface{}
+}
+
+func (_ *UnknownChange) isSubtreeChange() {}
+//func (c *UnknownChange) Node() Node {return c.node}
+type UnknownChange struct {
+	Data interface{}
 }
 
 type Node interface {

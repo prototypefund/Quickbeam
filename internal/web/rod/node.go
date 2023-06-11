@@ -49,16 +49,45 @@ func (n *RodNode) SubscribeSubtree() (<-chan web.SubtreeChange) {
 	c := make(chan web.SubtreeChange)
 	observerCallback := func(v gson.JSON) (interface {}, error) {
 		mutations := v.Get("mutations").Arr()
-		for _, mutation := range mutVals {
-			mutation := mutVal.Map()
+		if len(mutations) == 0 {
+			c <- &web.UnknownChange{Data: mutations,}
 		}
-		c <- &web.NodeAdded{}
+		for _, m := range mutations {
+			mutation := m.Map()
+			t, ok := mutation["type"]
+			if !ok {
+				c <- &web.UnknownChange{Data: mutation,}
+				continue
+			}
+			mutType := t.String()
+			if mutType == "childList" {
+				an, ok := mutation["addedNodes"]
+				if !ok {
+					c <- &web.UnknownChange{Data: mutation,}
+					continue
+				}
+				addedNodes := an.Arr()
+				for _, node := range addedNodes {
+					c <- &web.NodeAdded{Data: node,}
+				}
+				rm, ok := mutation["removedNodes"]
+				if !ok {
+					c <- &web.UnknownChange{Data: mutation,}
+				}
+				removedNodes := rm.Arr()
+				for _, node := range removedNodes {
+					c <- &web.NodeRemoved{Data: node,}
+				}
+			} else {
+				c <- &web.UnknownChange{Data: mutation}
+			}
+		}
 		return nil, nil
 	}
 	callbackName := fmt.Sprintf("subtreeCallback%x", n.getId())
 	page := n.element.Page()
 	page.MustExpose(callbackName, observerCallback)
-	n.element.MustEval(`(this) => {
+	n.element.MustEval(`() => {
 	  obs = new MutationObserver(` +
 		callbackName +`)
 	  obs.observe(this, { attributes: false, childList: true, subtree: true })

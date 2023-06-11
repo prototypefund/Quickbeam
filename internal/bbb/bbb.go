@@ -42,6 +42,10 @@ func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	return EmptyResult{}, nil
 }
 
+func userList(w web.Page) web.Node {
+	return w.Root().SubNode("[aria-label='Users list']", "")
+}
+
 type Attendee struct {
 	Name string `json:"name"`
 	Muted bool `json:"muted"`
@@ -51,9 +55,9 @@ type Attendee struct {
 type AttendeeResult struct{
 	Attendees []Attendee `json:"attendees"`
 }
-func GetAttendess(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
+func GetAttendees(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 	attendees := []Attendee{}
-	userList := w.Root().SubNode("[aria-label='Users list']", "")
+	userList := userList(w)
 	users := userList.SubNodes("[aria-label]")
 	for _, u := range users[1:] {
 		name := u.Text()
@@ -61,4 +65,24 @@ func GetAttendess(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 		attendees = append(attendees, Attendee{Name: name,})
 	}
 	return AttendeeResult{attendees}, nil
+}
+
+type ChangeResult struct {
+	Change string `json:"change"`
+}
+func WaitAttendanceChange(_ EmptyArgs, w web.Page) (res ChangeResult, err error) {
+	userList := userList(w)
+	c := userList.SubscribeSubtree()
+	for {
+		change := <-c
+		switch change.(type) {
+		case *web.NodeAdded:
+			return ChangeResult{Change: "added"}, nil
+		case *web.NodeRemoved:
+			return ChangeResult{Change: "removed"}, nil
+			//case *web.UnknownChange:
+			//log.Warn(fmt.Sprintf("Unknown subscription change: %v", c))
+		}
+	}
+	return ChangeResult{}, nil
 }

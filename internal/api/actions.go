@@ -11,6 +11,11 @@ var (
 	actions map[string]interface{} = map[string]interface{}{
 		"greet": greet,
 		"bbb/join": bbb.Join,
+		"bbb/yes": bbb.Yes,
+		"bbb/toggle_mute": bbb.ToggleMute,
+		"bbb/leave": bbb.Leave,
+		"bbb/attendees": bbb.GetAttendees,
+		"bbb/wait_attendance_change": bbb.WaitAttendanceChange,
 	}
 )
 
