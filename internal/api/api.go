@@ -120,11 +120,11 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 		}
 		actionParams, ok := args["args"]
 		if !ok {
-			return nil, errors.New("Invalid call: params missing")
+			return nil, errors.New("Invalid call: args missing")
 		}
 		apMap, ok := actionParams.(map[string]interface{})
 		ap := DispatchArgs(apMap)
-		if !ok {
+		if !ok && actionParams != nil {
 			return nil, errors.New("Invalid call: action params not a struct")
 		}
 		return a.dispatchAction(action, ap)

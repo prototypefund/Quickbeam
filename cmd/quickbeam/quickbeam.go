@@ -55,7 +55,7 @@ func main() {
 		in: os.Stdin,
 		out: os.Stdout,
 	}
-	stdInOutStream := jsonrpc2.NewPlainObjectStream(stdInOutCloser)
+	stdInOutStream := jsonrpc2.NewBufferedStream(stdInOutCloser, jsonrpc2.VSCodeObjectCodec{})
 	handler := jsonrpc2.HandlerWithError(handlerFunc)
 	conn := jsonrpc2.NewConn(context.TODO(), stdInOutStream, handler, func (_ *jsonrpc2.Conn) {})
 	<-conn.DisconnectNotify()
