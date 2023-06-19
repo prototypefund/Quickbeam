@@ -1,5 +1,4 @@
 package rod
-
 import (
 	"errors"
 
@@ -39,7 +38,11 @@ func (b *RodWebpage) Close() {
 
 func (b *RodWebpage) Navigate(url string) error {
 	if b.browser != nil {
-		b.page = b.browser.MustPage(url)
+		if b.page == nil {
+			b.page = b.browser.MustPage(url)
+		} else {
+			b.page.Navigate(url)
+		}
 	} else {
 		return errors.New("browser not running")
 	}

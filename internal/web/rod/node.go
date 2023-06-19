@@ -2,6 +2,7 @@ package rod
 
 import (
 	"fmt"
+	"os"
 
 	"git.sr.ht/~michl/quickbeam/internal/web"
 	"github.com/go-rod/rod"
@@ -49,7 +50,9 @@ func (n *RodNode) SubscribeSubtree() (<-chan web.SubtreeChange) {
 	c := make(chan web.SubtreeChange)
 	observerCallback := func(v gson.JSON) (interface {}, error) {
 		mutations := v.Get("mutations").Arr()
+		fmt.Fprintf(os.Stderr, "%s", v.JSON("", ""))
 		if len(mutations) == 0 {
+			fmt.Fprintln(os.Stderr, "addedNodes not found")
 			c <- &web.UnknownChange{Data: mutations,}
 		}
 		for _, m := range mutations {
