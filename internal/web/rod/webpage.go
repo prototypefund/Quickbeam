@@ -22,8 +22,18 @@ func (b *RodWebpage) Running() bool {
 
 func (b *RodWebpage) Start() error {
 	path, _ := launcher.LookPath()
-	control := launcher.New().Bin(path).Headless(false).Devtools(false).Set("audio").Delete("mute-audio").Delete("disable-audio-input").Delete("disable-audio-output").MustLaunch()
-	b.browser = rod.New().ControlURL(control).MustConnect()
+	control := launcher.New().
+		Bin(path).
+		Headless(false).
+		Devtools(false).
+		Set("audio").
+		Delete("mute-audio").
+		Delete("disable-audio-input").
+		Delete("disable-audio-output").
+		MustLaunch()
+	b.browser = rod.New().
+		ControlURL(control).
+		MustConnect()
 	b.page = nil
 	return nil
 }

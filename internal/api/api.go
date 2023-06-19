@@ -88,7 +88,7 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 		case webpageType:
 			argList = append(argList, reflect.ValueOf(a.Web))
 		default:
-			return nil, InternalDispatchError{fmt.Sprintf("Unknown type for dependencie injection: %v", t)}
+			return nil, InternalDispatchError{fmt.Sprintf("Unknown type for dependency injection: %v", t)}
 		}
 	}
 	results := reflect.ValueOf(f).Call(argList)
