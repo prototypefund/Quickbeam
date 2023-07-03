@@ -7,12 +7,12 @@ import (
 	"os"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
-	"git.sr.ht/~michl/quickbeam/internal/web/rod"
+	"git.sr.ht/~michl/quickbeam/internal/web/marionette"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
 var a api.Api = api.Api{
-	Web: rod.New(),
+	Web: marionette.NewPage(),
 }
 
 type myReadWriteCloser struct {
@@ -51,6 +51,12 @@ func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request
 }
 
 func main() {
+	firefox := marionette.NewPage()
+	firefox.Headless = false
+	firefox.StartBrowser()
+	defer firefox.KillBrowser()
+	a.Web = firefox
+
 	stdInOutCloser := &myReadWriteCloser{
 		in: os.Stdin,
 		out: os.Stdout,

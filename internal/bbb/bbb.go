@@ -10,14 +10,20 @@ import (
 type JoinResult struct {success string}
 func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 	// m.b.Page.MustElement("body > div.ReactModalPortal > div > div > div.sc-jObWnj.fWuLOw > div > div > span > button:nth-child(1)").MustClick()
-	button := w.Root().SubNode("[aria-label='Microphone']", "")
+	button, err := w.Root().SubNode("[aria-label='Microphone']", "")
+	if err != nil {
+		return res, err
+	}
 	button.Click()
 	return JoinResult{"success"}, nil
 }
 
 func Yes(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	selector := "[data-test='echoYesBtn']"
-	button := w.Root().SubNode(selector, "")
+	button, err := w.Root().SubNode(selector, "")
+	if err != nil {
+		return res, err
+	}
 	button.Click()
 	return EmptyResult{}, nil
 }
@@ -28,21 +34,45 @@ func ToggleMute(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	selMute := "[aria-label=\"Mute\"]"
 	selUnmute := "[aria-label=\"Unmute\"]"
 	root := w.Root()
-	if b, ok := root.MaybeSubNode(selMute, ""); ok {
+	b, ok, err := root.MaybeSubNode(selMute, "")
+	if err != nil {
+		return res, err
+	}
+	if ok {
 		b.Click()
-	} else if b, ok := root.MaybeSubNode(selUnmute, ""); ok {
-		b.Click()
+	} else {
+		b, ok, err := root.MaybeSubNode(selUnmute, "")
+		if err != nil {
+			return res, err
+		}
+		if ok {
+			b.Click()
+		}
 	}
 	return EmptyResult{}, nil
 }
 
 func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
-	w.Root().SubNode("header [aria-label=\"Options\"]", "").Click()
-	w.Root().SubNode("[role=\"menuitem\"]", "Leave meeting").Click()
-	return EmptyResult{}, nil
+	hamburger, err := w.Root().SubNode("header [aria-label=\"Options\"]", "")
+	if err != nil {
+		return
+	}
+	err = hamburger.Click()
+	if err != nil {
+		return
+	}
+	leave, err := w.Root().SubNode("[role=\"menuitem\"]", "Leave meeting")
+	if err != nil {
+		return
+	}
+	err = leave.Click()
+	if err != nil {
+		return
+	}
+	return
 }
 
-func userList(w web.Page) web.Node {
+func userList(w web.Page) (web.Noder, error) {
 	return w.Root().SubNode("[aria-label='Users list']", "")
 }
 
@@ -57,10 +87,16 @@ type AttendeeResult struct{
 }
 func GetAttendees(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 	attendees := []Attendee{}
-	userList := userList(w)
-	users := userList.SubNodes("[aria-label]")
+	userList, err := userList(w)
+	if err != nil {
+		return
+	}
+	users, err := userList.SubNodes("[aria-label]")
+	if err != nil {
+		return
+	}
 	for _, u := range users[1:] {
-		name := u.Text()
+		name, _ := u.Text()
 		name = strings.ReplaceAll(name, "\n", " ")
 		attendees = append(attendees, Attendee{Name: name,})
 	}
@@ -71,8 +107,14 @@ type ChangeResult struct {
 	Change string `json:"change"`
 }
 func WaitAttendanceChange(_ EmptyArgs, w web.Page) (res ChangeResult, err error) {
-	userList := userList(w)
-	c := userList.SubscribeSubtree()
+	userList, err := userList(w)
+	if err != nil {
+		return
+	}
+	c, err := userList.SubscribeSubtree()
+	if err != nil {
+		return
+	}
 	for {
 		change := <-c
 		switch change.(type) {

@@ -1,13 +1,19 @@
 package web
 
+type ErrNotFound struct {}
+func (_ ErrNotFound) Error() string {
+	return "Element was not found on webpage"
+}
+
 type Page interface {
+	Start() error
 	Close()
+	Running() bool
 	Navigate(url string) error
 	Back()
 	Forward()
-	Start() error
-	Running() bool
-	Root() Node
+	Root() Noder
+	Execute(js string) (string, error)
 }
 
 type SubtreeChange interface {
@@ -33,11 +39,11 @@ type UnknownChange struct {
 	Data interface{}
 }
 
-type Node interface {
-	SubNode(selector string, regexp string) Node
-	SubNodes(selector string) []Node
-	MaybeSubNode(selector string, regexp string) (Node, bool)
-	SubscribeSubtree() <-chan SubtreeChange
-	Text() string
-	Click()
+type Noder interface {
+	SubNode(selector string, regexp string) (Noder, error)
+	SubNodes(selector string) ([]Noder, error)
+	MaybeSubNode(selector string, regexp string) (Noder, bool, error)
+	SubscribeSubtree() (<-chan SubtreeChange, error)
+	Text() (string, error)
+	Click() error
 }
