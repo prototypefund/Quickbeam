@@ -109,7 +109,7 @@ func (n *Node) WaitSubNode(selector string, regexp string) (web.Noder, error) {
 	if found && len(nodes) > 0 {
 		return nodes[0], nil
 	}
-	return nil, nil
+	return nil, web.ErrNotFound{}
 }
 
 func (n *Node) SubscribeSubtree() (c <-chan web.SubtreeChange, err error) {

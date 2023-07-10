@@ -52,6 +52,28 @@ func ToggleMute(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	return EmptyResult{}, nil
 }
 
+func ToggleRaisedHand(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
+	selRaise := "[aria-label=\"Raise hand\"]"
+	selLower := "[aria-label=\"Lower hand\"]"
+	root := w.Root()
+	b, ok, err := root.MaybeSubNode(selRaise, "")
+	if err != nil {
+		return res, err
+	}
+	if ok {
+		b.Click()
+	} else {
+		b, ok, err := root.MaybeSubNode(selLower, "")
+		if err != nil {
+			return res, err
+		}
+		if ok {
+			b.Click()
+		}
+	}
+	return EmptyResult{}, nil
+}
+
 func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	hamburger, err := w.Root().SubNode("header [aria-label=\"Options\"]", "")
 	if err != nil {

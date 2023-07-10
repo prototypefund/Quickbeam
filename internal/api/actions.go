@@ -13,6 +13,7 @@ var (
 		"bbb/join": bbb.Join,
 		"bbb/yes": bbb.Yes,
 		"bbb/toggle_mute": bbb.ToggleMute,
+		"bbb/toggle_raised_hand": bbb.ToggleRaisedHand,
 		"bbb/leave": bbb.Leave,
 		"bbb/attendees": bbb.GetAttendees,
 		"bbb/wait_attendance_change": bbb.WaitAttendanceChange,
