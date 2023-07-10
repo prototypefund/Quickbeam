@@ -52,7 +52,7 @@ func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request
 
 func main() {
 	firefox := marionette.NewPage()
-	firefox.Headless = false
+	firefox.Headless = true
 	firefox.StartBrowser()
 	defer firefox.KillBrowser()
 	a.Web = firefox
