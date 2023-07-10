@@ -43,6 +43,7 @@ type Noder interface {
 	SubNode(selector string, regexp string) (Noder, error)
 	SubNodes(selector string) ([]Noder, error)
 	MaybeSubNode(selector string, regexp string) (Noder, bool, error)
+	WaitSubNode(selector string, regexp string) (Noder, error)
 	SubscribeSubtree() (<-chan SubtreeChange, error)
 	Text() (string, error)
 	Click() error

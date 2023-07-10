@@ -10,7 +10,7 @@ import (
 type JoinResult struct {success string}
 func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 	// m.b.Page.MustElement("body > div.ReactModalPortal > div > div > div.sc-jObWnj.fWuLOw > div > div > span > button:nth-child(1)").MustClick()
-	button, err := w.Root().SubNode("[aria-label='Microphone']", "")
+	button, err := w.Root().WaitSubNode("[aria-label='Microphone']", "")
 	if err != nil {
 		return res, err
 	}
@@ -20,7 +20,7 @@ func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 
 func Yes(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	selector := "[data-test='echoYesBtn']"
-	button, err := w.Root().SubNode(selector, "")
+	button, err := w.Root().WaitSubNode(selector, "")
 	if err != nil {
 		return res, err
 	}

@@ -17,6 +17,40 @@ import (
 	"github.com/shibukawa/configdir"
 )
 
+var (
+	defaultFFPrefs = map[string]string{
+		"startup.homepage_welcome_url.additional": "''",
+		"devtools.errorconsole.enabled":           "true",
+		"devtools.chrome.enabled":                 "true",
+
+		// allow microphone and camera
+		"media.navigator.permission.disabled": "true",
+
+		// Send Browser Console (different from Devtools console) output to
+		// STDOUT.
+		"browser.dom.window.dump.enabled": "true",
+
+		// From:
+		// http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in//l388
+		// Make url-classifier updates so rare that they won"t affect tests.
+		"urlclassifier.updateinterval": "172800",
+		// Point the url-classifier to a nonexistent local URL for fast failures.
+		"browser.safebrowsing.provider.0.gethashURL": "'http://localhost/safebrowsing-dummy/gethash'",
+		"browser.safebrowsing.provider.0.keyURL":     "'http://localhost/safebrowsing-dummy/newkey'",
+		"browser.safebrowsing.provider.0.updateURL":  "'http://localhost/safebrowsing-dummy/update'",
+
+		// Disable self repair/SHIELD
+		"browser.selfsupport.url": "'https://localhost/selfrepair'",
+		// Disable Reader Mode UI tour
+		"browser.reader.detectedFirstArticle": "true",
+
+		// Set the policy firstURL to an empty string to prevent
+		// the privacy info page to be opened on every "web-ext run".
+		// (See #1114 for rationale)
+		"datareporting.policy.firstRunURL": "''",
+	}
+)
+
 type Page struct {
 	FirefoxPath string
 	Headless bool
@@ -81,6 +115,9 @@ func (p *Page) Start() (err error) {
 		}
 		p.client.NewSession("", nil)
 	}
+	for key, value := range defaultFFPrefs {
+		p.setFirefoxPreference(key, value)
+	}
 	if false {
 		r, err := p.client.NewWindow(true, "tab", false)
 		if err != nil {
@@ -140,11 +177,11 @@ func (p *Page) Forward() {
 
 func (p *Page) Root() web.Noder {
 	root, _ := p.client.FindElement(marionette_client.By(marionette_client.CSS_SELECTOR), "body")
-	return &Node{root}
+	return NewNode(root)
 }
 
 func (p *Page) Running() bool {
-	return true
+	return p.client != nil && p.pageName != ""
 }
 
 func shell(command string) string {
@@ -182,6 +219,20 @@ type Firefox struct {
 	Stderr io.ReadCloser
 }
 
+func (p *Page) setFirefoxPreference(key string, value string) {
+	client := p.client
+	var script string
+	client.SetContext(marionette_client.CHROME)
+	script = fmt.Sprintf(`
+		Components.utils.import("resource://gre/modules/Preferences.jsm");
+		prefs = new Preferences({defaultBranch: "root"});
+    prefs.set("%s", %s);`, key, value)
+	args := []interface{}{}
+	client.ExecuteScript(script, args, 1000, false)
+
+	client.SetContext(marionette_client.CONTENT)
+}
+
 func (p *Page) StartBrowser() (err error) {
 	if p.FirefoxPath == "" {
 		p.FirefoxPath = whichFirefox()
@@ -198,7 +249,6 @@ func startFirefox(path string, headless bool) (firefox Firefox, err error) {
 	f := Firefox{}
 	args := []string{"--marionette"}
 	if headless {
-
 		args = append(args, "--headless")
 	}
 	profilePath := getFirefoxProfilePath()
@@ -225,6 +275,14 @@ func startFirefox(path string, headless bool) (firefox Firefox, err error) {
 
 func (p *Page) Execute(js string) (string, error) {
 	args := []interface{}{}
+	r, err := p.client.ExecuteScript(js, args, 10000, false)
+	if err != nil {
+		return "", err
+	}
+	return r.Value, nil
+}
+
+func (p *Page) Exec(js string, args []interface{}) (string, error) {
 	r, err := p.client.ExecuteScript(js, args, 10000, false)
 	if err != nil {
 		return "", err
