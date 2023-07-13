@@ -40,6 +40,14 @@ func (e InvalidTypeError) Error() string {
 	return fmt.Sprintf("Wrong type for argument `%s`: expected %v, got %v", e.Key, fieldType, e.ValueType)
 }
 
+type AppNotAvailable struct {
+	Module string
+}
+
+func (e AppNotAvailable) Error() string {
+	return fmt.Sprintf("Module '%v' is not available", e.Module)
+}
+
 type ActionNotAvailableError struct {
 	Action string
 }

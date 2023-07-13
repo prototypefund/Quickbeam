@@ -66,22 +66,10 @@ func numberOfArguments(f interface{}) int {
 	return t.NumIn()
 }
 
-func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
-	if err := assertDispatchable(f); err != nil {
-		return nil, err
-	}
-	numArgs := numberOfArguments(f)
-
-	argType := argumentType(f, 0)
-	argPointer, err := newArgument(argType, arguments)
-	if err != nil {
-		return nil, err
-	}
-	argList := []reflect.Value{argPointer.Elem()}
-
+func (a *Api) appendDependencies(argList []reflect.Value, function interface{}, startingAt int) ([]reflect.Value, error) {
 	webpageType := reflect.TypeOf((*web.Page)(nil)).Elem()
-	for i := 1; i < numArgs; i++ {
-		t := argumentType(f, i)
+	for i := startingAt; i < numberOfArguments(function); i++ {
+		t := argumentType(function, i)
 		switch t {
 		case reflect.TypeOf(a):
 			argList = append(argList, reflect.ValueOf(a))
@@ -90,6 +78,25 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 		default:
 			return nil, InternalDispatchError{fmt.Sprintf("Unknown type for dependency injection: %v", t)}
 		}
+	}
+	return argList, nil
+}
+
+func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
+	if err := assertDispatchable(f); err != nil {
+		return nil, err
+	}
+
+	argType := argumentType(f, 0)
+	argPointer, err := newArgument(argType, arguments)
+	if err != nil {
+		return nil, err
+	}
+
+	argList := []reflect.Value{argPointer.Elem()}
+	argList, err = a.appendDependencies(argList, f, 1)
+	if err != nil {
+		return nil, err
 	}
 	results := reflect.ValueOf(f).Call(argList)
 	res = results[0].Interface()
@@ -144,6 +151,16 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 			return nil, errors.New("url is not a string")
 		}
 		return nil, a.Web.Navigate(url)
+	case "state":
+		app, ok := args["application"]
+		if !ok {
+			return nil, ParamMissingError{"module"}
+		}
+		application, ok := app.(string)
+		if !ok {
+			return nil, errors.New("application is not a string")
+		}
+		return a.getState(application)
 	}
 	return nil, errors.New("Unknown Method")
 }
