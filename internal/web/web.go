@@ -51,4 +51,5 @@ type Noder interface {
 	SubscribeSubtree() (<-chan SubtreeChange, error)
 	Text() (string, error)
 	Click() error
+	SendKeys(sequence string) error
 }

@@ -150,3 +150,24 @@ func WaitAttendanceChange(_ EmptyArgs, w web.Page) (res ChangeResult, err error)
 	}
 	return ChangeResult{}, nil
 }
+
+type GreenlightJoinArgs struct {
+	Name string `json:"name"`
+}
+func GreenlightJoin(args GreenlightJoinArgs, web web.Page) (res EmptyResult, err error) {
+	input, err := web.Root().SubNode("form input[type=text]", "")
+	if err != nil {
+		return
+	}
+	err = input.SendKeys(args.Name)
+	if err != nil {
+		return
+	}
+	// other ideas for selector: id=room-join type=submit regexp=Start
+	startBtn, err := web.Root().SubNode("form button[type=submit]", "")
+	if err != nil {
+		return
+	}
+	err = startBtn.Click()
+	return
+}
