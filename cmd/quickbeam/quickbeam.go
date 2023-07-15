@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
 	"git.sr.ht/~michl/quickbeam/internal/web/marionette"
@@ -12,7 +14,6 @@ import (
 )
 
 var a api.Api = api.Api{
-	Web: marionette.NewPage(),
 }
 
 type myReadWriteCloser struct {
@@ -51,11 +52,24 @@ func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request
 }
 
 func main() {
-	firefox := marionette.NewPage()
-	firefox.Headless = true
-	firefox.StartBrowser()
-	defer firefox.KillBrowser()
-	a.Web = firefox
+	firefox := marionette.NewFirefox()
+	firefox.Headless = false
+	firefox.Start()
+	a.WebPage, _ = firefox.NewPage()
+
+	cleanup := func() {
+		firefox.Quit()
+	}
+	defer cleanup()
+	sigs := make(chan os.Signal)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for {
+			_ = <- sigs
+			cleanup()
+			os.Exit(0)
+		}
+	}()
 
 	stdInOutCloser := &myReadWriteCloser{
 		in: os.Stdin,

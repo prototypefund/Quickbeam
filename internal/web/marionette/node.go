@@ -128,4 +128,9 @@ func (n *Node) Click() error {
 	return nil
 }
 
+func (n *Node) SendKeys(sequence string) error {
+	return n.element.SendKeys(sequence)
+}
+
+
 var _ web.Noder = &Node{}

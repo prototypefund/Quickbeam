@@ -74,7 +74,7 @@ func (a *Api) appendDependencies(argList []reflect.Value, function interface{}, 
 		case reflect.TypeOf(a):
 			argList = append(argList, reflect.ValueOf(a))
 		case webpageType:
-			argList = append(argList, reflect.ValueOf(a.Web))
+			argList = append(argList, reflect.ValueOf(a.WebPage))
 		default:
 			return nil, InternalDispatchError{fmt.Sprintf("Unknown type for dependency injection: %v", t)}
 		}
@@ -107,7 +107,7 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 }
 
 type Api struct {
-	Web web.Page
+	WebPage web.Page
 }
 
 func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
@@ -136,12 +136,6 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 		}
 		return a.dispatchAction(action, ap)
 	case "open":
-		if !a.Web.Running() {
-			err = a.Web.Start()
-			if err != nil {
-				return nil, err
-			}
-		}
 		u, ok := args["url"]
 		if !ok {
 			return nil, ParamMissingError{"url"}
@@ -150,7 +144,7 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 		if !ok {
 			return nil, errors.New("url is not a string")
 		}
-		return nil, a.Web.Navigate(url)
+		return nil, a.WebPage.Navigate(url)
 	case "state":
 		app, ok := args["application"]
 		if !ok {

@@ -54,7 +54,6 @@ func subset(a []string, b []string) bool {
 func NavigateTester(webpage Page, t *testing.T) {
 	url, closer := setupTest()
 	defer closer()
-	webpage.Start()
 	webpage.Navigate(url)
 	webpage.Close()
 	expectedPaths := []string{"/", "/index.js"}
@@ -66,7 +65,6 @@ func NavigateTester(webpage Page, t *testing.T) {
 func SubnodeTester(webpage Page, t *testing.T) {
 	url, closer := setupTest()
 	defer closer()
-	webpage.Start()
 	webpage.Navigate(url)
 	root := webpage.Root()
 	heading, _ := root.SubNode("h1", "")
@@ -101,7 +99,6 @@ func SubnodeTester(webpage Page, t *testing.T) {
 func MaybeSubnodeTester(webpage Page, t *testing.T) {
 	url, closer := setupTest()
 	defer closer()
-	webpage.Start()
 	webpage.Navigate(url)
 
 	root := webpage.Root()

@@ -7,9 +7,11 @@ import (
 )
 
 func TestPage(t *testing.T) {
-	page := NewPage()
-	page.Headless = false
-	page.StartBrowser()
-	defer page.KillBrowser()
+	t.Log("TestPage")
+	firefox := NewFirefox()
+	firefox.Headless = false
+	firefox.Start()
+	defer firefox.Quit()
+	page, _ := firefox.NewPage()
 	web.NavigateTester(page, t)
 }

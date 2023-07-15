@@ -5,10 +5,14 @@ func (_ ErrNotFound) Error() string {
 	return "Element was not found on webpage"
 }
 
-type Page interface {
+type Browser interface {
 	Start() error
+	Quit() error
+	NewPage() (Page, error)
+}
+
+type Page interface {
 	Close()
-	Running() bool
 	Navigate(url string) error
 	Back()
 	Forward()
