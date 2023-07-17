@@ -106,6 +106,31 @@ func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res
 	return
 }
 
+func paramMissingError(param string) error {
+	return ParamMissingError{param}
+}
+
+func paramWrongTypeError(param string, value interface{}, expectedType string) error {
+	actualType := reflect.ValueOf(value).Type()
+	return errors.New(fmt.Sprintf("Parameter '%s' is of type %v, not %s", param, actualType, expectedType))
+}
+
+func getArgInt(args DispatchArgs, key string) (int, error) {
+	value, ok := args[key]
+	if !ok {
+		return 0, paramMissingError(key)
+	}
+	f, ok := value.(float64)
+	if !ok {
+		return 0, paramWrongTypeError(key, value, "int")
+	}
+	res := int(f)
+	if float64(res) != f {
+		return 0, paramWrongTypeError(key, value, "int")
+	}
+	return res, nil
+}
+
 type Api struct {
 	WebPage web.Page
 }
@@ -114,6 +139,13 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 	switch method {
 	case "ping":
 		return builtin.Ping()
+	case "wait":
+		duration, err := getArgInt(args, "for")
+		if err != nil {
+			return nil, err
+		}
+		res := builtin.Wait(duration)
+		return res, nil
 	case "version":
 		return builtin.GetVersion(), nil
 	case "call":
