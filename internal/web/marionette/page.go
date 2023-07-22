@@ -1,7 +1,9 @@
 package marionette
 
 import (
+	"errors"
 	"log"
+	"time"
 
 	"git.sr.ht/~michl/quickbeam/internal/web"
 	"github.com/njasm/marionette_client"
@@ -50,9 +52,12 @@ func (p *Page) Forward() {
 	_ = p.client.Forward()
 }
 
-func (p *Page) Root() web.Noder {
-	root, _ := p.client.FindElement(marionette_client.By(marionette_client.CSS_SELECTOR), "body")
-	return NewNode(root)
+func (p *Page) Root() (web.Noder, error) {
+	found, roots, err := waitForElements(p.client, "body", "", "", time.Second * time.Duration(10))
+	if err != nil || !found {
+		return nil, errors.New("Could not find root node")
+	}
+	return roots[0], nil
 }
 
 func (p *Page) Execute(js string) (string, error) {

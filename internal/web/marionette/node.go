@@ -21,8 +21,21 @@ func NewNode(element *marionette_client.WebElement) *Node {
 	return &Node{element, nil}
 }
 
-func findElements(parent *marionette_client.WebElement, selector string, re string) (res []web.Noder, err error) {
-	elements, err := parent.FindElements(marionette_client.By(marionette_client.CSS_SELECTOR), selector)
+type elementsFinder interface {
+	FindElements(marionette_client.By, string) ([]*marionette_client.WebElement, error)
+}
+
+func findElements(parent elementsFinder, selector string, re string, xpath string) (res []web.Noder, err error) {
+	var elements []*marionette_client.WebElement
+	if len(xpath) > 0 {
+		elements, err = parent.FindElements(
+			marionette_client.By(marionette_client.XPATH),
+			xpath)
+	} else {
+		elements, err = parent.FindElements(
+			marionette_client.By(marionette_client.CSS_SELECTOR),
+			selector)
+	}
 	if err != nil {
 		return res, err
 	}
@@ -44,7 +57,7 @@ func findElements(parent *marionette_client.WebElement, selector string, re stri
 }
 
 func (n *Node) SubNode(selector string, regexp string) (node web.Noder, err error) {
-	nodes, err := findElements(n.element, selector, regexp)
+	nodes, err := findElements(n.element, selector, regexp, "")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +69,7 @@ func (n *Node) SubNode(selector string, regexp string) (node web.Noder, err erro
 }
 
 func (n *Node) SubNodes(selector string) (nodes []web.Noder, err error) {
-	nodes, err = findElements(n.element, selector, "")
+	nodes, err = findElements(n.element, selector, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +77,7 @@ func (n *Node) SubNodes(selector string) (nodes []web.Noder, err error) {
 }
 
 func (n *Node) MaybeSubNode(selector string, regexp string) (web.Noder, bool, error) {
-	nodes, err := findElements(n.element, selector, regexp)
+	nodes, err := findElements(n.element, selector, regexp, "")
 	if err != nil {
 		return nil, false, err
 	}
@@ -74,13 +87,13 @@ func (n *Node) MaybeSubNode(selector string, regexp string) (web.Noder, bool, er
 	return nodes[0], true, nil
 }
 
-func waitForElements(element *marionette_client.WebElement, selector string, regexp string, timeout time.Duration) (found bool, res []web.Noder, err error) {
+func waitForElements(element elementsFinder, selector string, regexp string, xpath string, timeout time.Duration) (found bool, res []web.Noder, err error) {
 	nodes := make(chan web.Noder)
 	failure := make(chan error)
 
 	go func(){
 		for {
-			ns, err := findElements(element, selector, regexp)
+			ns, err := findElements(element, selector, regexp, xpath)
 			if err != nil {
 				failure <- err
 				return
@@ -102,7 +115,7 @@ func waitForElements(element *marionette_client.WebElement, selector string, reg
 }
 
 func (n *Node) WaitSubNode(selector string, regexp string) (web.Noder, error) {
-	found, nodes, err := waitForElements(n.element, selector, regexp, time.Duration(10) * time.Second)
+	found, nodes, err := waitForElements(n.element, selector, regexp, "", time.Duration(10) * time.Second)
 	if err != nil {
 		return nil, err
 	}

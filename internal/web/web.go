@@ -16,7 +16,7 @@ type Page interface {
 	Navigate(url string) error
 	Back()
 	Forward()
-	Root() Noder
+	Root() (Noder, error)
 	Execute(js string) (string, error)
 }
 

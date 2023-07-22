@@ -66,7 +66,7 @@ func SubnodeTester(webpage Page, t *testing.T) {
 	url, closer := setupTest()
 	defer closer()
 	webpage.Navigate(url)
-	root := webpage.Root()
+	root, _ := webpage.Root()
 	heading, _ := root.SubNode("h1", "")
 	actualText, _ := heading.Text()
 	expectedText := "Hello, world!"
@@ -101,7 +101,7 @@ func MaybeSubnodeTester(webpage Page, t *testing.T) {
 	defer closer()
 	webpage.Navigate(url)
 
-	root := webpage.Root()
+	root, _ := webpage.Root()
 	ghost, ok, _ := root.MaybeSubNode("div ol ul p", "")
 	if ok {
 		t.Errorf("MaybeSubNode: found something we did not want: %v", ghost)
@@ -109,7 +109,7 @@ func MaybeSubnodeTester(webpage Page, t *testing.T) {
 }
 
 func InteractionTester(webpage Page, t *testing.T) {
-	root := webpage.Root()
+	root, _ := webpage.Root()
 
 	button, _ := root.SubNode("button", "")
 	changingList, _ := root.SubNode("#changingList", "")

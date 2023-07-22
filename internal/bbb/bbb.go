@@ -10,7 +10,11 @@ import (
 type JoinResult struct {success string}
 func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 	// m.b.Page.MustElement("body > div.ReactModalPortal > div > div > div.sc-jObWnj.fWuLOw > div > div > span > button:nth-child(1)").MustClick()
-	button, err := w.Root().WaitSubNode("[aria-label='Microphone']", "")
+	root, err := w.Root()
+	if err != nil {
+		return
+	}
+	button, err := root.WaitSubNode("[aria-label='Microphone']", "")
 	if err != nil {
 		return res, err
 	}
@@ -19,8 +23,12 @@ func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 }
 
 func Yes(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
+	root, err := w.Root()
+	if err != nil {
+		return
+	}
 	selector := "[data-test='echoYesBtn']"
-	button, err := w.Root().WaitSubNode(selector, "")
+	button, err := root.WaitSubNode(selector, "")
 	if err != nil {
 		return res, err
 	}
@@ -31,9 +39,12 @@ func Yes(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 type EmptyArgs struct{}
 type EmptyResult struct{}
 func ToggleMute(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
+	root, err := w.Root()
+	if err != nil {
+		return
+	}
 	selMute := "[aria-label=\"Mute\"]"
 	selUnmute := "[aria-label=\"Unmute\"]"
-	root := w.Root()
 	b, ok, err := root.MaybeSubNode(selMute, "")
 	if err != nil {
 		return res, err
@@ -55,7 +66,10 @@ func ToggleMute(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 func ToggleRaisedHand(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	selRaise := "[aria-label=\"Raise hand\"]"
 	selLower := "[aria-label=\"Lower hand\"]"
-	root := w.Root()
+	root, err := w.Root()
+	if err != nil {
+		return
+	}
 	b, ok, err := root.MaybeSubNode(selRaise, "")
 	if err != nil {
 		return res, err
@@ -75,7 +89,11 @@ func ToggleRaisedHand(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 }
 
 func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
-	hamburger, err := w.Root().SubNode("header [aria-label=\"Options\"]", "")
+	root, err := w.Root()
+	if err != nil {
+		return
+	}
+	hamburger, err := root.SubNode("header [aria-label=\"Options\"]", "")
 	if err != nil {
 		return
 	}
@@ -83,7 +101,7 @@ func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	if err != nil {
 		return
 	}
-	leave, err := w.Root().SubNode("[role=\"menuitem\"]", "Leave meeting")
+	leave, err := root.SubNode("[role=\"menuitem\"]", "Leave meeting")
 	if err != nil {
 		return
 	}
@@ -95,7 +113,11 @@ func Leave(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 }
 
 func userList(w web.Page) (web.Noder, error) {
-	return w.Root().SubNode("[aria-label='Users list']", "")
+	root, err := w.Root()
+	if err != nil {
+		return nil, err
+	}
+	return root.SubNode("[aria-label='Users list']", "")
 }
 
 type Attendee struct {
@@ -155,7 +177,11 @@ type GreenlightJoinArgs struct {
 	Name string `json:"name"`
 }
 func GreenlightJoin(args GreenlightJoinArgs, web web.Page) (res EmptyResult, err error) {
-	input, err := web.Root().SubNode("form input[type=text]", "")
+	root, err := web.Root()
+	if err != nil {
+		return
+	}
+	input, err := root.SubNode("form input[type=text]", "")
 	if err != nil {
 		return
 	}
@@ -164,7 +190,7 @@ func GreenlightJoin(args GreenlightJoinArgs, web web.Page) (res EmptyResult, err
 		return
 	}
 	// other ideas for selector: id=room-join type=submit regexp=Start
-	startBtn, err := web.Root().SubNode("form button[type=submit]", "")
+	startBtn, err := root.SubNode("form button[type=submit]", "")
 	if err != nil {
 		return
 	}
