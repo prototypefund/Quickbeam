@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -62,4 +63,8 @@ type InternalDispatchError struct{
 
 func (e InternalDispatchError) Error() string {
 	return e.message
+}
+
+func RuntimeError(wrapped interface{}) error {
+	return errors.New(fmt.Sprintf("Runtime error: %v", wrapped))
 }

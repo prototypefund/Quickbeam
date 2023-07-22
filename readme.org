@@ -27,3 +27,10 @@ The ~close~ method quits any running web browser and quickbeam itself.
 #+begin_src json
 { "jsonrpc": "2.0", "method": "close", "id": 2 }
 #+end_src
+
+** Errors
+
+Error categories brainstorm:
+
+- marionette.Page.Navigate: Reached error page (e.g. dnsNotFound)
+- Runtime error / panic

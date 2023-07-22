@@ -40,6 +40,12 @@ func (s *myReadWriteCloser) Close() (err error) {
 }
 
 func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (result interface{}, err error) {
+	defer func () {
+		if r := recover(); r != nil {
+			result = nil
+			err = api.RuntimeError(r)
+		}
+	}()
 	var params map[string]interface{}
 	if req.Params != nil {
 		if err := json.Unmarshal(*req.Params, &params); err != nil {
