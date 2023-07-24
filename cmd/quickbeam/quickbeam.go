@@ -58,8 +58,18 @@ func handlerFunc(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request
 }
 
 func main() {
+	var headless bool = true
+	for _, arg := range os.Args {
+		switch arg {
+		case "--headless":
+			headless = true
+		case "--no-headless":
+			headless = false
+		}
+	}
+
 	firefox := marionette.NewFirefox()
-	firefox.Headless = false
+	firefox.Headless = headless
 	firefox.Start()
 	a.WebPage, _ = firefox.NewPage()
 
