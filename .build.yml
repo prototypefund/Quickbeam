@@ -1,0 +1,15 @@
+image: alpine/latest
+packages:
+  - go
+  - hut
+sources:
+  - https://git.sr.ht/~michl/quickbeam
+tasks:
+  - build: |
+      cd quickbeam
+      make build
+  - package: |
+      cd quickbeam
+      make package
+artifacts:
+  - quickbeam/quickbeam.gz
