@@ -1,15 +1,21 @@
-image: alpine/latest
+image: archlinux
 packages:
   - go
   - hut
 sources:
   - https://git.sr.ht/~michl/quickbeam
+oauth: git.sr.ht/OBJECTS:RW git.sr.ht/REPOSITORIES:RO git.sr.ht/PROFILE:RO
 tasks:
   - build: |
       cd quickbeam
       make build
-  - package: |
+  - publish: |
       cd quickbeam
-      make package
+      tag=$(git describe --exact-match 2>/dev/null || true)
+      if [ -n "$tag" ]; then
+        make package
+        version=$(echo "$tag" | tr -d 'v')
+        hut git artifact upload --rev "$tag" "quickbeam-$version.gz"
+      fi
 artifacts:
-  - quickbeam/quickbeam.gz
+  - quickbeam/quickbeam
