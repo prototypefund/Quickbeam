@@ -2,3 +2,4 @@
 /.quickbeam_history
 /quickbeam
 /quickbeam-repl
+/secrets.env
