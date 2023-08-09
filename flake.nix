@@ -59,7 +59,15 @@
         in
         {
           default = pkgs.mkShell {
-            buildInputs = with pkgs; [ go gopls gotools go-tools godef chromium ];
+            buildInputs = with pkgs; [
+              go
+              gopls
+              gotools
+              go-tools
+              godef
+              chromium
+              firefox
+            ];
           };
         });
 
