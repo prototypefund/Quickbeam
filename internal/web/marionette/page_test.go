@@ -7,6 +7,9 @@ import (
 )
 
 func TestPage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("do not launch firefox in short mode.")
+	}
 	t.Log("TestPage")
 	firefox := NewFirefox()
 	firefox.Headless = false

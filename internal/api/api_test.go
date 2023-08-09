@@ -10,6 +10,7 @@ func actionArgs(name string, args DispatchArgs) DispatchArgs {
 }
 
 func TestDispatch(t *testing.T) {
+	api := Api{}
 	tests := []struct{
 		name string
 		method string
@@ -24,7 +25,7 @@ func TestDispatch(t *testing.T) {
 	}
 	for _, tt := range(tests) {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := Dispatch(tt.method, tt.args)
+			_, err := api.Dispatch(tt.method, tt.args)
 			if tt.err && err == nil {
 				t.Error("Exptected error, got none")
 			}

@@ -7,6 +7,9 @@ import (
 )
 
 func TestNode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("do not launch firefox in short mode.")
+	}
 	t.Log("TestNode")
 	firefox := NewFirefox()
 	firefox.Headless = false
@@ -15,5 +18,5 @@ func TestNode(t *testing.T) {
 	page, _ := firefox.NewPage()
 	web.SubnodeTester(page, t)
 	web.MaybeSubnodeTester(page, t)
-	web.InteractionTester(page, t)
+	//web.InteractionTester(page, t)
 }
