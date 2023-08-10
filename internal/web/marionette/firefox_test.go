@@ -17,7 +17,18 @@ func (e *testExecuter) ExecOrEmpty(command string) string {
 }
 
 func TestStart(t *testing.T) {
-	t.Log("TestStart")
+	if testing.Short() {
+		t.Skip("Do not start Firefox in short mode")
+	}
+	ff := &Firefox{}
+	err := start(ff, cmdExecute{})
+	if err != nil {
+		t.Error(err)
+	}
+	ff.process.Kill()
+}
+
+func TestInitFirefoxSettings(t *testing.T) {
 	testCases := []struct {
 		firefox *Firefox
 		executer *testExecuter
@@ -41,7 +52,7 @@ func TestStart(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := startFirefox(tc.firefox, tc.executer)
+		err := initFirefoxSettings(tc.firefox, tc.executer)
 		if err != nil {
 			if tc.errCode == 0 {
 				t.Errorf("No error expected, this occured: %v", err)
@@ -62,6 +73,6 @@ func TestStart(t *testing.T) {
 				t.Errorf("Expected error code %d, but no error occured", tc.errCode)
 			}
 		}
-		tc.firefox.process.Kill()
+		//tc.firefox.process.Kill()
 	}
 }

@@ -53,7 +53,7 @@ var (
 
 type Firefox struct {
 	FirefoxPath string
-	ProfilePath string
+	Profile string
 	Headless bool
 	client *marionette_client.Client
 	process *os.Process
@@ -121,8 +121,13 @@ func (f *Firefox) NewPage() (res web.Page, err error) {
 
 
 func start(f *Firefox, shell cmdExecuter) (err error) {
+	err = initFirefoxSettings(f, shell)
+	if err != nil {
+		return err
+	}
+	createFirefoxProfile(f, shell)
 	if f.process == nil {
-		err = startFirefox(f, shell)
+		err = startFirefox(f)
 	}
 	if err != nil {
 		return err
@@ -134,23 +139,37 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 	return
 }
 
-func startFirefox(f *Firefox, shell cmdExecuter) (err error) {
+// createFirefoxProfile creates the Firefox profile in f.Profile.
+//
+// Because sometimes, for example if installed via snap, Firefox is limited to certain paths, we first try to create the
+// profile via the --CreateProfile command line switch. But sometimes that fails for unkown reasons. If it does, we use
+// a path in ~/.mozilla/firefox/ as profile and hope it works.
+func createFirefoxProfile(f *Firefox, shell cmdExecuter) {
+	output := shell.ExecOrEmpty(fmt.Sprintf("%s --CreateProfile %s", f.FirefoxPath, f.Profile))
+	if output == "Error creating profile." {
+		f.Profile = getFirefoxProfilePath()
+	}
+}
+
+func initFirefoxSettings(f *Firefox, shell cmdExecuter) error {
 	if f.FirefoxPath == "" {
 		f.FirefoxPath = shell.ExecOrEmpty("which firefox")
 	}
 	if f.FirefoxPath == "" {
 		return protocol.ConfigurationError("Firefox executable not found")
 	}
-
-	if f.ProfilePath == "" {
-		f.ProfilePath = getFirefoxProfilePath()
+	if f.Profile == "" {
+		f.Profile = "quickbeam"
 	}
+	return nil
+}
 
+func startFirefox(f *Firefox) (err error) {
 	args := []string{"--marionette"}
 	if f.Headless {
 		args = append(args, "--headless")
 	}
-	args = append(args, "--profile", f.ProfilePath)
+	args = append(args, "--profile", f.Profile)
 
 	firefoxCmd := exec.Command(f.FirefoxPath, args...)
 	f.stdout, err = firefoxCmd.StdoutPipe()
