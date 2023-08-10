@@ -1,6 +1,6 @@
 all: build
 
-VERSION = 0.2
+VERSION = 0.3
 
 build:
 	go build ./cmd/quickbeam
