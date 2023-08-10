@@ -54,6 +54,7 @@ var (
 type Firefox struct {
 	FirefoxPath string
 	Profile string
+	ProfilePath string
 	Headless bool
 	client *marionette_client.Client
 	process *os.Process
@@ -134,6 +135,9 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 	}
 	if f.client == nil {
 		err = startMarionette(f)
+		if err != nil {
+			return err
+		}
 	}
 	f.emptyTab = true
 	return
@@ -147,7 +151,8 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 func createFirefoxProfile(f *Firefox, shell cmdExecuter) {
 	output := shell.ExecOrEmpty(fmt.Sprintf("%s --CreateProfile %s", f.FirefoxPath, f.Profile))
 	if output == "Error creating profile." {
-		f.Profile = getFirefoxProfilePath()
+		f.Profile = ""
+		f.ProfilePath = getFirefoxProfilePath()
 	}
 }
 
@@ -169,7 +174,11 @@ func startFirefox(f *Firefox) (err error) {
 	if f.Headless {
 		args = append(args, "--headless")
 	}
-	args = append(args, "--profile", f.Profile)
+	if f.ProfilePath != "" {
+		args = append(args, "--profile", f.ProfilePath)
+	} else {
+		args = append(args, "-P", f.Profile)
+	}
 
 	firefoxCmd := exec.Command(f.FirefoxPath, args...)
 	f.stdout, err = firefoxCmd.StdoutPipe()
