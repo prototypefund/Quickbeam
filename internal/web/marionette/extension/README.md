@@ -7,7 +7,7 @@ that are visited by the Quickbeam Browser (Firefox).
 In the browser, navigate to [about:debugging#/runtime/this-firefox](the about:debugging page), under the tab "This Firefox", select "Load temporary addon", there select the [manifest.json](manifest.json) file.
 
 ## Loading the extension (Marionette)
-The `addon:install` method can be pointed to the (absolute) path of the [manifest.json](manifest.json).
+The `Addon:Install` method can be used to install the extension. It accepts to arguments: `path` is the absolute path to the xpi file and `temporary` needs to be true as the extension is unsigned and can only be installed temporarily.
 
 ## Building the extension
 TBD
