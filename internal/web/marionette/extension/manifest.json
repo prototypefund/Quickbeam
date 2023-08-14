@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "BeamAPI",
+  "version": "0.0.1",
+
+  "description": "Allows easy automation of BigBlueButton.",
+
+  "icons": {
+    "96": "icons/96.png",
+    "48": "icons/48.png"
+  },
+
+  "permissions": [
+    "webRequest",
+    "<all_urls>",
+    "webRequestBlocking"
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
+

@@ -1,9 +1,17 @@
 all: build
 
+XPI_BASE_PATH = internal/web/marionette
+XPI_FILES = content.js background.js manifest.json icons/48.png icons/96.png
+
 VERSION = 0.3
 
-build:
+build:	internal/web/marionette/extension.xpi
 	go build ./cmd/quickbeam
+
+$(XPI_BASE_PATH)/extension.xpi: $(addprefix $(XPI_BASE_PATH)/extension/,$(XPI_FILES))
+	cd internal/web/marionette/extension; zip -r -FS ../extension.xpi $(XPI_FILES)
+
+extension: $(XPI_BASE_PATH)/extension.xpi
 
 package: quickbeam-$(VERSION).gz
 quickbeam-$(VERSION).gz: build

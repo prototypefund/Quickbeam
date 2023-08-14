@@ -57,10 +57,12 @@ type Firefox struct {
 	ProfilePath string
 	Headless bool
 	client *marionette_client.Client
+	transport *marionette_client.MarionetteTransport
 	process *os.Process
 	stdout io.ReadCloser
 	stderr io.ReadCloser
 	emptyTab bool
+	websocketErrors chan error
 }
 
 func NewFirefox() *Firefox {
@@ -69,6 +71,12 @@ func NewFirefox() *Firefox {
 
 func (f *Firefox) Start() (err error) {
 	return start(f, cmdExecute{})
+}
+
+func (f *Firefox) Wait() {
+	log.Println("waiting for firefox")
+	f.process.Wait()
+	log.Println("firefox exited")
 }
 
 // TODO invalidate all pages?
@@ -110,9 +118,9 @@ func (f *Firefox) NewPage() (res web.Page, err error) {
 		}
 
 		var ok bool
-		page.pageName, ok = responseGetString(r, "name")
+		page.pageName, ok = responseGetString(r, "handle")
 		if !ok {
-			log.Println("marionette.Page.Start: no name attribute of type string in return value")
+			log.Println("marionette.Page.Start: no handle attribute of type string in return value %v", r)
 			return nil, err
 		}
 
@@ -133,8 +141,20 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 	if err != nil {
 		return err
 	}
+	f.startWebsocketServer()
+	go func () {
+		for {
+			err := <- f.websocketErrors
+			log.Println(err)
+		}
+	}()
+	log.Println("after websocket")
 	if f.client == nil {
 		err = startMarionette(f)
+		if err != nil {
+			return err
+		}
+		err = f.LoadExtension()
 		if err != nil {
 			return err
 		}
@@ -203,7 +223,9 @@ func startMarionette(f *Firefox) (err error) {
 	connected := false
 	start := time.Now()
 	for time.Since(start) < 30*time.Second {
+		f.transport = &marionette_client.MarionetteTransport{}
 		f.client = marionette_client.NewClient()
+		f.client.Transport(f.transport)
 		err := f.client.Connect("127.0.0.1", 2828)
 		if err != nil {
 			time.Sleep(10 * time.Millisecond)

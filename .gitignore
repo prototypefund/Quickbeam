@@ -3,3 +3,4 @@
 /quickbeam
 /quickbeam-repl
 /secrets.env
+/internal/web/marionette/extension.xpi
