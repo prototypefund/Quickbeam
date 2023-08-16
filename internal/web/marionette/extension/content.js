@@ -14,6 +14,11 @@
     window.quickbeam = new Object();
     window.quickbeam.loaded = true;
 
+    const settingScript = document.querySelector("html > body > script:not([src])");
+    const settingsJSON = settingScript.text.match(/__meteor_runtime_config__ = JSON.parse\(decodeURIComponent\("(.*)"\)\)/)[1];
+    const settingsMeteorRuntimeConfig = JSON.parse(decodeURIComponent(settingsJSON));
+    window.quickbeam.bbbAppSettings = settingsMeteorRuntimeConfig.PUBLIC_SETTINGS.app;
+
     // quickBeamSocket is the connection to the quickBeam server.
     var quickBeamSocket = null;
 
