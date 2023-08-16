@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"git.sr.ht/~michl/quickbeam/bbb"
+	"git.sr.ht/~michl/quickbeam/deprecated/bbb"
 	"github.com/chzyer/readline"
 )
 
