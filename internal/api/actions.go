@@ -17,6 +17,7 @@ var (
 		"bbb/leave": bbb.Leave,
 		"bbb/attendees": bbb.GetAttendees,
 		"bbb/wait_attendance_change": bbb.WaitAttendanceChange,
+		"bbb/get_all_messages": bbb.GetAllMessages,
 	}
 )
 

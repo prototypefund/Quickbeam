@@ -24,6 +24,13 @@ func EnvironmentError(msg string, a ...interface{}) error {
 	}
 }
 
+func WebpageError(msg string) error {
+	return QuickbeamError{
+		Msg: msg,
+		Code: 40000,
+	}
+}
+
 type QuickbeamError struct {
 	Msg string
 	Code uint16
