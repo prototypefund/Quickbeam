@@ -2,6 +2,7 @@ image: archlinux
 packages:
   - go
   - hut
+  - zip
 sources:
   - https://git.sr.ht/~michl/quickbeam
 oauth: git.sr.ht/OBJECTS:RW git.sr.ht/REPOSITORIES:RO git.sr.ht/PROFILE:RO
@@ -19,3 +20,4 @@ tasks:
       fi
 artifacts:
   - quickbeam/quickbeam
+  - quickbeam/internal/web/marionette/extension.xpi
