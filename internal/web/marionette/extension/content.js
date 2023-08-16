@@ -1,19 +1,18 @@
 
-const userQuerySelector = 'div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)';
-const messageQuerySelector = '[data-test="chatUserMessageText"]'
-
 
 (function(){
+    const userQuerySelector = 'div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)';
+    const messageQuerySelector = '[data-test="chatUserMessageText"]'
+
     console.log("Loading extension ...");
 
     // Check for marker; only load the script once per page.
-    if (document.head.querySelector('meta[name="quickbeam"]')) {
+    if (window.quickbeam && window.quickbeam.loaded) { 
         console.warn('Script already loaded!');
         return; // abort early
     }
-    const marker = document.createElement('meta');
-    marker.setAttribute('name', 'quickbeam');
-    document.head.appendChild(marker);
+    window.quickbeam = new Object();
+    window.quickbeam.loaded = true;
 
     // quickBeamSocket is the connection to the quickBeam server.
     var quickBeamSocket = null;
@@ -29,6 +28,7 @@ const messageQuerySelector = '[data-test="chatUserMessageText"]'
         connectQuickBeam();
       };
     };
+    connectQuickBeam();
 
     const handleChatMessage = (isPrivate, user, msg) => {
         scope = isPrivate ? "private" : "public";
@@ -65,8 +65,8 @@ const messageQuerySelector = '[data-test="chatUserMessageText"]'
               }
               for (const addedNode of mutation.addedNodes) {
                 // check if element has attribute, in which case it is probably a chat message.
-                // otherwise we can return early.
-                if (addedNode.dataset.test === "msgListItem") handleMessageNode(addedNode);
+                  // otherwise we can return early.
+                if (addedNode.dataset && addedNode.dataset.test === "msgListItem") handleMessageNode(addedNode);
 
               }
           } else if (mutation.type === "attributes") {
@@ -77,5 +77,5 @@ const messageQuerySelector = '[data-test="chatUserMessageText"]'
     };
 
     const observer = new MutationObserver(callback);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
