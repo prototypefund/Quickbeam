@@ -154,7 +154,8 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 		if err != nil {
 			return err
 		}
-		err = f.LoadExtension()
+		//err = f.injectJavascript()
+		//err = f.LoadExtension()
 		if err != nil {
 			return err
 		}

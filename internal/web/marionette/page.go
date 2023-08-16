@@ -39,6 +39,7 @@ func (p *Page) Navigate(url string) (err error) {
 		log.Printf("marionette.Page.Navigate: %v", err)
 		return
 	}
+	_, err = p.Execute(string(chatJs))
 	return
 }
 

@@ -1,17 +1,22 @@
 package marionette
 
 import (
+	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 //go:embed extension.xpi
 var extensionXpi []byte
+//go:embed extension/chat.js
+var chatJs []byte
 
 func (ff *Firefox) LoadExtension() error {
 	extension, err := os.CreateTemp("", "quickbeam-*.xpi")
@@ -43,10 +48,46 @@ var upgrade = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
+// MessageHandler is an example for a callback that handles the message
+// received from the websocket connection.
+// The message is expected to be a JSON object, and can be deserialized
+// for further processing.
+func ChatMessageHandler(msg []byte) {
+	buf := bytes.NewBuffer(msg)
+
+	message := struct {
+		Scope string `json:"scope"`
+		User  string `json:"user"`
+		Text  string `json:"message"`
+		Timestamp int64 `json:"timestamp"`
+	}{}
+
+	err := json.NewDecoder(buf).Decode(&message)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(time.Unix(0, message.Timestamp * 1000000).Format("2. Jan 2006 15:04"))
+	log.Println(message)
+}
+
 func read(conn *websocket.Conn) {
 	for {
-		_, p, _ := conn.ReadMessage()
-		log.Println(p)
+		_, msg, _ := conn.ReadMessage()
+		if len(msg) > 0 {
+			buf := bytes.NewBuffer(msg)
+			message := struct {
+				Type string `json:"type"`
+			}{}
+			err := json.NewDecoder(buf).Decode(&message)
+			if err != nil {
+				log.Println(err)
+			}
+			if message.Type == "chat" {
+				ChatMessageHandler(msg)
+			} else {
+				log.Println(string(msg))
+			}
+		}
 	}
 }
 
@@ -61,11 +102,17 @@ func (ff *Firefox) startWebsocketServer() {
 		read(ws)
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ws", wsEndpoint)
+	mux.HandleFunc("/", wsEndpoint)
 	go func() {
 		err := http.ListenAndServe(":18981", mux)
 		if err != nil {
 			errChannel <- err
 		}
 	}()
+}
+
+func (ff *Firefox) injectJavascript() error {
+	resp, err := ff.client.ExecuteScript(string(chatJs), []interface{}{}, 1000, false)
+	log.Println(resp)
+	return err
 }
