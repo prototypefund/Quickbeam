@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -62,6 +63,9 @@ func main() {
 	var headless bool = true
 	for _, arg := range os.Args {
 		switch arg {
+		case "--version":
+			fmt.Println("quickbeam v0.3")
+			os.Exit(0)
 		case "--headless":
 			headless = true
 		case "--no-headless":
