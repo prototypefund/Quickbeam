@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -70,18 +71,30 @@ func main() {
 
 	firefox := marionette.NewFirefox()
 	firefox.Headless = headless
-	firefox.Start()
-	a.WebPage, _ = firefox.NewPage()
-
 	cleanup := func() {
 		firefox.Quit()
 	}
 	defer cleanup()
+	err := firefox.Start()
+	if err != nil {
+		cleanup()
+		log.Fatal(err)
+	}
+	a.WebPage, err = firefox.NewPage()
+	if err != nil {
+		cleanup()
+		log.Fatal(err)
+	}
+
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
+		firefox.Wait()
+		os.Exit(1)
+	}()
+	go func() {
 		for {
-			_ = <- sigs
+			<- sigs
 			cleanup()
 			os.Exit(0)
 		}
