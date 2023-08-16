@@ -145,5 +145,12 @@ func (n *Node) SendKeys(sequence string) error {
 	return n.element.SendKeys(sequence)
 }
 
+func (n *Node) Attribute(name string) (value string, found bool, err error) {
+	value = n.element.Attribute(name)
+	if value != "" {
+		found = true
+	}
+	return value, found, nil
+}
 
 var _ web.Noder = &Node{}

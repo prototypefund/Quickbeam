@@ -52,4 +52,5 @@ type Noder interface {
 	Text() (string, error)
 	Click() error
 	SendKeys(sequence string) error
+	Attribute(name string) (string, bool, error)
 }
