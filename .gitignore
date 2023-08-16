@@ -4,3 +4,5 @@
 /quickbeam-repl
 /secrets.env
 /internal/web/marionette/extension.xpi
+/protocol-in.log
+/protocol-out.log
