@@ -6,8 +6,8 @@ import (
 	"git.sr.ht/~michl/quickbeam/internal/web"
 )
 
+type JoinResult struct{ success string }
 
-type JoinResult struct {success string}
 func Join(_ EmptyArgs, w web.Page) (res JoinResult, err error) {
 	// m.b.Page.MustElement("body > div.ReactModalPortal > div > div > div.sc-jObWnj.fWuLOw > div > div > span > button:nth-child(1)").MustClick()
 	root, err := w.Root()
@@ -38,6 +38,7 @@ func Yes(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 
 type EmptyArgs struct{}
 type EmptyResult struct{}
+
 func ToggleMute(_ EmptyArgs, w web.Page) (res EmptyResult, err error) {
 	root, err := w.Root()
 	if err != nil {
@@ -121,14 +122,15 @@ func userList(w web.Page) (web.Noder, error) {
 }
 
 type Attendee struct {
-	Name string `json:"name"`
-	Muted bool `json:"muted"`
+	Name   string `json:"name"`
+	Muted  bool   `json:"muted"`
 	Status string `json:"status"`
 }
 
-type AttendeeResult struct{
+type AttendeeResult struct {
 	Attendees []Attendee `json:"attendees"`
 }
+
 func GetAttendees(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 	attendees := []Attendee{}
 	userList, err := userList(w)
@@ -142,7 +144,7 @@ func GetAttendees(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 	for _, u := range users[1:] {
 		name, _ := u.Text()
 		name = strings.ReplaceAll(name, "\n", " ")
-		attendees = append(attendees, Attendee{Name: name,})
+		attendees = append(attendees, Attendee{Name: name})
 	}
 	return AttendeeResult{attendees}, nil
 }
@@ -150,6 +152,7 @@ func GetAttendees(_ EmptyArgs, w web.Page) (res AttendeeResult, err error) {
 type ChangeResult struct {
 	Change string `json:"change"`
 }
+
 func WaitAttendanceChange(_ EmptyArgs, w web.Page) (res ChangeResult, err error) {
 	userList, err := userList(w)
 	if err != nil {
@@ -176,6 +179,7 @@ func WaitAttendanceChange(_ EmptyArgs, w web.Page) (res ChangeResult, err error)
 type GreenlightJoinArgs struct {
 	Name string `json:"name"`
 }
+
 func GreenlightJoin(args GreenlightJoinArgs, web web.Page) (res EmptyResult, err error) {
 	root, err := web.Root()
 	if err != nil {
