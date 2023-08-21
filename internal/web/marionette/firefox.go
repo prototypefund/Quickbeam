@@ -120,7 +120,7 @@ func (f *Firefox) NewPage() (res web.Page, err error) {
 		var ok bool
 		page.pageName, ok = responseGetString(r, "handle")
 		if !ok {
-			log.Println("marionette.Page.Start: no handle attribute of type string in return value %v", r)
+			log.Printf("marionette.Page.Start: no handle attribute of type string in return value %v\n", r)
 			return nil, err
 		}
 

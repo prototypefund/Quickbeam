@@ -1,9 +1,11 @@
 package marionette
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 
+	"git.sr.ht/~michl/quickbeam/internal/protocol"
 	"git.sr.ht/~michl/quickbeam/internal/web"
 	"github.com/njasm/marionette_client"
 )
@@ -62,7 +64,9 @@ func (n *Node) SubNode(selector string, regexp string) (node web.Noder, err erro
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		err = web.ErrNotFound{}
+		err = protocol.WebpageError(
+			fmt.Sprintf("Element with '%s' and regex '%s' not found",
+				selector, regexp))
 		return nil, err
 	}
 	return nodes[0], nil

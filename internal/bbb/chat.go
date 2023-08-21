@@ -2,7 +2,9 @@ package bbb
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"git.sr.ht/~michl/quickbeam/internal/protocol"
@@ -16,11 +18,46 @@ const (
 	ChatScopePublic
 )
 
+func (s *ChatScope) UnmarshalJSON(data []byte) error {
+	var value string
+	err := json.Unmarshal(data, &value)
+	if err != nil {
+		return err
+	}
+
+	switch value {
+	case "public":
+		*s = ChatScopePublic
+	case "private":
+		*s = ChatScopePrivate
+	default:
+		return protocol.UserError(
+			fmt.Sprintf("Unknown scope ('public' or 'private') value:%s", value))
+	}
+
+	return nil
+}
+
+func (s ChatScope) MarshalJSON() ([]byte, error) {
+	var value string
+	switch s {
+	case ChatScopePrivate:
+		value = "private"
+	case ChatScopePublic:
+		value = "public"
+	default:
+		return nil, protocol.InternalError(
+			fmt.Sprintf("Invalid value for ChatScope: %v", s))
+	}
+
+	return json.Marshal(value)
+}
+
 type ChatMessage struct {
 	Scope ChatScope `json:"scope"`
-	Time time.Time `json:"time"`
-	User string `json:"user"`
-	Text string `json:"text"`
+	Time  time.Time `json:"time"`
+	User  string    `json:"user"`
+	Text  string    `json:"text"`
 }
 
 func (msg *ChatMessage) MarshalJSON() ([]byte, error) {
@@ -31,36 +68,115 @@ func (msg *ChatMessage) MarshalJSON() ([]byte, error) {
 
 type GetAllMessagesReturn struct {
 	Messages []ChatMessage `json:"messages"`
-	Count int `json:"count"`
+	Count    int           `json:"count"`
 }
 
-func GetAllMessages(_ EmptyArgs, page web.Page) (resp GetAllMessagesReturn, err error) {
-	root, err := page.Root()
+func getChatPanel(root web.Noder, button web.Noder, public bool) (web.Noder, error) {
+	log.Printf("getChatPanel(root, %v, %t)\n", button, public)
+	err := button.Click()
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	// chatButton, ok, err := root.MaybeSubNode("div#chat-toggle-button", "")
-	// if err != nil {
-	//	return
-	// }
-	// if !ok {
-	//	return resp, protocol.WebpageError("Could not find public chat button")
-	// }
-	// err = chatButton.Click()
-	// if err != nil {
-	//	return
-	// }
-
-	chatPanel, ok, err := root.MaybeSubNode(
-		`div[data-test="publicChat"]>div[data-test="chatMessages"]`, "")
+	chatPanel, ok, err := findChatPanel(root, public)
+	log.Printf("findChatPanel: %s, %t, %s\n", chatPanel, ok, err)
 	if err != nil {
-		return
+		return nil, err
 	}
 	if !ok {
-		return resp, protocol.WebpageError("Could not find public chat panel")
+		err = button.Click()
+		if err != nil {
+			return nil, err
+		}
+		chatPanel, ok, err = findChatPanel(root, public)
+		log.Printf("findChatPanel: %s, %t, %s\n", chatPanel, ok, err)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			log.Println("throwing error")
+			return nil, protocol.WebpageError("Could not find chat panel")
+		}
+	}
+	return chatPanel, nil
+}
+
+func findChatPanel(root web.Noder, public bool) (web.Noder, bool, error) {
+	log.Printf("findChatPanel(root, %t)\n", public)
+	var mainDivTestData string
+	if public {
+		mainDivTestData = "publicChat"
+	} else {
+		mainDivTestData = "privateChat"
+	}
+	return root.MaybeSubNode(
+		fmt.Sprintf(`div[data-test="%s"]>div[data-test="chatMessages"]`,
+			mainDivTestData),
+		"")
+}
+
+func parseMessageNode(node web.Noder, scope ChatScope) (msg ChatMessage, err error) {
+	userNode, ok, err := node.MaybeSubNode(
+		`div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)`, "")
+	if err != nil {
+		return
+	}
+	var user string
+	if ok {
+		user, _ = userNode.Text()
 	}
 
+	textNodes, err := node.SubNodes(
+		`[data-test="chatUserMessageText"]`)
+	if err != nil {
+		return
+	}
+	var texts []string
+	for _, tn := range textNodes {
+		t, err := tn.Text()
+		if err == nil {
+			texts = append(texts, t)
+		}
+	}
+	text := strings.Join(texts, "\n")
+
+	timeNode, ok, err := node.MaybeSubNode(
+		`div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > time`, "")
+	if err != nil {
+		return
+	}
+	var timelit string
+	if ok {
+		timelit, _, _ = timeNode.Attribute("datetime")
+	}
+	timestamp, err := time.Parse("Mon Jan 2 2006 15:04:05 GMT-0700", timelit[0:33])
+
+	return ChatMessage{
+		Scope: scope,
+		User:  user,
+		Text:  text,
+		Time:  timestamp,
+	}, nil
+}
+
+func getScopeMessages(root web.Noder, button web.Noder) (messages []ChatMessage, err error) {
+	t, err := button.Text()
+	if err != nil {
+		return
+	}
+	var scope ChatScope
+	if t == "Public Chat" {
+		scope = ChatScopePublic
+	} else {
+		scope = ChatScopePrivate
+	}
+
+	chatPanel, err := getChatPanel(root, button, scope == ChatScopePublic)
+	if err != nil {
+		return
+	}
+
+	time.Sleep(time.Millisecond * 200)
 	messageCandidates, err := chatPanel.SubNodes(`span`)
 	if err != nil {
 		return
@@ -70,83 +186,62 @@ func GetAllMessages(_ EmptyArgs, page web.Page) (resp GetAllMessagesReturn, err 
 	for _, c := range messageCandidates {
 		_, found, err := c.MaybeSubNode(`p[data-test="chatUserMessageText"]`, "")
 		if err != nil {
-			return resp, err
+			return messages, err
 		}
 		if found {
 			msgNodes = append(msgNodes, c)
 		}
 	}
 
-	messages := []ChatMessage{}
 	for _, n := range msgNodes {
-		scope := ChatScopePublic
-
-		userNode, ok, err := n.MaybeSubNode(
-			`div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)`, "")
+		msg, err := parseMessageNode(n, scope)
 		if err != nil {
-			return resp, err
+			return messages, err
 		}
-		var user string
-		if ok {
-			user, _ = userNode.Text()
-		}
-
-		textNode, ok, err := n.MaybeSubNode(
-			`[data-test="chatUserMessageText"]`, "")
-		if err != nil {
-			return resp, err
-		}
-		var text string
-		if ok {
-			text, _ = textNode.Text()
-		}
-
-		timeNode, ok, err := n.MaybeSubNode(
-			`div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > time`, "")
-		if err != nil {
-			return resp, err
-		}
-		var timelit string
-		if ok {
-			timelit, _, _ = timeNode.Attribute("datetime")
-		}
-		timestamp, err := time.Parse("Mon Jan 2 2006 15:04:05 GMT-0700", timelit[0:33])
-
-		messages = append(messages, ChatMessage{
-			Scope: scope,
-			User: user,
-			Text: text,
-			Time: timestamp,
-		})
+		messages = append(messages, msg)
 	}
 
-	time1, _ := time.Parse("2.1.2006 15:04:05", "11.8.2023 08:20:00")
-	time2, _ := time.Parse("2.1.2006 15:04:05", "10.8.2023 19:12:00")
-	time2 = time.Now()
+	button.Click()
+	return
+}
+
+func collectChatMessages(root web.Noder) (messages []ChatMessage, err error) {
+	chatButtons, err := root.SubNodes("div#chat-toggle-button")
+	if err != nil {
+		return
+	}
+	for _, button := range chatButtons {
+		scopeMessages, err := getScopeMessages(root, button)
+		if err != nil {
+			return messages, err
+		}
+		messages = append(messages, scopeMessages...)
+	}
+	return
+}
+
+func GetAllMessages(_ EmptyArgs, page web.Page) (resp GetAllMessagesReturn, err error) {
+	root, err := page.Root()
+	if err != nil {
+		return
+	}
+
+	messages, err := collectChatMessages(root)
+	if err != nil {
+		return
+	}
+
 	return GetAllMessagesReturn{
-		Messages: append(messages, []ChatMessage{
-			{
-				Scope: ChatScopePrivate,
-				User: "Alice",
-				Text: "Good morning!",
-				Time: time1,
-			},
-			{
-				Scope: ChatScopePublic,
-				User: "Bob",
-				Text: "Good evening!",
-				Time: time2,
-			},
-		}...),
-		Count: 2,
+		Messages: messages,
+		Count:    len(messages),
 	}, nil
 }
 
 type jsonChatMessage struct {
-	Scope string `json:"scope"`
-	User  string `json:"user"`
-	Text  string `json:"text"`
-	Timestamp int64 `json:"timestamp"`
+	Scope     string `json:"scope"`
+	User      string `json:"user"`
+	Text      string `json:"text"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 func (jm *jsonChatMessage) encode(in ChatMessage) {
@@ -173,9 +268,9 @@ func (jm *jsonChatMessage) decode() ChatMessage {
 
 	return ChatMessage{
 		Scope: scope,
-		Time: timestamp,
-		User: jm.User,
-		Text: jm.Text,
+		Time:  timestamp,
+		User:  jm.User,
+		Text:  jm.Text,
 	}
 }
 
@@ -189,4 +284,105 @@ func ChatMessageHandler(msg []byte) {
 
 	message := parseMsg.decode()
 	log.Println(message)
+}
+
+type SendChatMessageArgs struct {
+	Text      string `json:"text"`
+	Recipient string `json:"recipient"`
+	Scope     string `json:"scope"`
+}
+
+func LogUserList(_ EmptyArgs, page web.Page) (res EmptyResult, err error) {
+	root, err := page.Root()
+	if err != nil {
+		return
+	}
+	userList, err := getUserList(root)
+	if err != nil {
+		return
+	}
+	args := []interface{}{
+		userList,
+	}
+	_, err = page.Exec(`console.log("hello eins");console.log(arguments[0]);`, args)
+	if err != nil {
+		return
+	}
+	_, err = page.Exec(`console.log("hello zwei!");`, args)
+	return
+}
+
+func getUserList(root web.Noder) (userList web.Noder, err error) {
+	userList, err = root.SubNode(`div[aria-label="Users list"]>div>div[aria-label="Users list"]`, "")
+	return
+}
+
+func getUserButton(root web.Noder, user string) (userButton web.Noder, err error) {
+	userList, err := getUserList(root)
+	if err != nil {
+		return
+	}
+	userRegex := fmt.Sprintf("^%s\\s+(\\(You\\))?$", user)
+	userButton, err = userList.SubNode("span div[role=\"button\"]", userRegex)
+	return
+}
+
+func getPrivateChatButton(root web.Noder) (chatButton web.Noder, err error) {
+	chatButton, err = root.SubNode("ul[role=\"menu\"] li[role=\"menuitem\"]", "Start a private chat")
+	return
+}
+
+func SendChatMessage(args SendChatMessageArgs, page web.Page) (res EmptyResult, err error) {
+	root, err := page.Root()
+	if err != nil {
+		return
+	}
+
+	if args.Scope == "private" {
+		if args.Recipient == "" {
+			return res, protocol.UserError("Recipient argument empty")
+		}
+		userButton, err := getUserButton(root, args.Recipient)
+		if err != nil {
+			return res, err
+		}
+		err = userButton.Click()
+		if err != nil {
+			return res, err
+		}
+		chatButton, err := getPrivateChatButton(root)
+		if err != nil {
+			return res, err
+		}
+		err = chatButton.Click()
+		if err != nil {
+			return res, err
+		}
+	} else {
+		_, found, err := findChatPanel(root, true)
+		if err != nil {
+			return res, err
+		}
+		if !found {
+			button, err := root.SubNode("div#chat-toggle-button", "^Public Chat$")
+			if err != nil {
+				return res, err
+			}
+			err = button.Click()
+			if err != nil {
+				return res, err
+			}
+		}
+	}
+	messageArea, err := root.SubNode("textarea#message-input", "")
+	if err != nil {
+		return
+	}
+	messageArea.SendKeys(args.Text)
+	sendButton, err := root.SubNode("button[aria-label=\"Send message\"]", "")
+	if err != nil {
+		return
+	}
+	err = sendButton.Click()
+	return
 }

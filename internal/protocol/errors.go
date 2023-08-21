@@ -31,6 +31,13 @@ func WebpageError(msg string) error {
 	}
 }
 
+func UserError(msg string) error {
+	return QuickbeamError{
+		Msg: msg,
+		Code: 50000,
+	}
+}
+
 type QuickbeamError struct {
 	Msg string
 	Code uint16
