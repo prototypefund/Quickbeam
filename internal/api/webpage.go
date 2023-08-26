@@ -7,8 +7,8 @@ import (
 type WebpageId uint64
 
 var (
-	webpages = make(map[WebpageId] web.Page)
-	lastId WebpageId = 0
+	webpages           = make(map[WebpageId]web.Page)
+	lastId   WebpageId = 0
 )
 
 type OpenWebpageReturn struct {
@@ -16,7 +16,7 @@ type OpenWebpageReturn struct {
 }
 
 type OpenWebpageArgument struct {
-	Url string  `json:"url"`
+	Url string `json:"url"`
 }
 
 func openWebpage(arg OpenWebpageArgument) (OpenWebpageReturn, error) {

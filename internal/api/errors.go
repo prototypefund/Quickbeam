@@ -19,7 +19,7 @@ func (e ParamMissingError) Error() string {
 
 type InvalidArgumentError struct {
 	ArgumentType reflect.Type
-	Key string
+	Key          string
 }
 
 func (e InvalidArgumentError) Error() string {
@@ -28,8 +28,8 @@ func (e InvalidArgumentError) Error() string {
 
 type InvalidTypeError struct {
 	ArgumentType reflect.Type
-	Key string
-	ValueType reflect.Type
+	Key          string
+	ValueType    reflect.Type
 }
 
 func (e InvalidTypeError) Error() string {
@@ -57,7 +57,7 @@ func (e ActionNotAvailableError) Error() string {
 	return fmt.Sprintf("Action '%v' ist not available currently", e.Action)
 }
 
-type InternalDispatchError struct{
+type InternalDispatchError struct {
 	message string
 }
 

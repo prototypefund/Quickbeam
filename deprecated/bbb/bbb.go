@@ -10,14 +10,14 @@ import (
 
 type Meeting struct {
 	url string
-	b *browser.Browser
+	b   *browser.Browser
 }
 
 func NewMeeting(url string) *Meeting {
 	b := browser.New(url)
 	return &Meeting{
 		url: url,
-		b: b,
+		b:   b,
 	}
 }
 
@@ -55,7 +55,7 @@ func (m *Meeting) Yes() {
 	modal := page.MustElement(".ReactModalPortal")
 	button := modal.MustElement("[data-test='echoYesBtn']")
 	button.MustWaitInteractable()
-	button.MustClick();
+	button.MustClick()
 }
 
 type MeetingCallback func(m *Meeting)
@@ -63,7 +63,7 @@ type MeetingCallback func(m *Meeting)
 func (m *Meeting) SubscribeAttendanceChange(cb MeetingCallback) {
 	page := m.b.Page
 	c := make(chan bool)
-	observerCallback := func(v gson.JSON) (interface {}, error) {
+	observerCallback := func(v gson.JSON) (interface{}, error) {
 		c <- true
 		return nil, nil
 	}
@@ -81,7 +81,7 @@ func (m *Meeting) SubscribeAttendanceChange(cb MeetingCallback) {
 	}`)
 	go func() {
 		for {
-			<- c
+			<-c
 			cb(m)
 		}
 	}()

@@ -9,16 +9,16 @@ import (
 
 var (
 	actions map[string]interface{} = map[string]interface{}{
-		"greet": greet,
-		"bbb/join": bbb.Join,
-		"bbb/yes": bbb.Yes,
-		"bbb/toggle_mute": bbb.ToggleMute,
-		"bbb/toggle_raised_hand": bbb.ToggleRaisedHand,
-		"bbb/leave": bbb.Leave,
-		"bbb/attendees": bbb.GetAttendees,
+		"greet":                      greet,
+		"bbb/join":                   bbb.Join,
+		"bbb/yes":                    bbb.Yes,
+		"bbb/toggle_mute":            bbb.ToggleMute,
+		"bbb/toggle_raised_hand":     bbb.ToggleRaisedHand,
+		"bbb/leave":                  bbb.Leave,
+		"bbb/attendees":              bbb.GetAttendees,
 		"bbb/wait_attendance_change": bbb.WaitAttendanceChange,
-		"bbb/get_all_messages": bbb.GetAllMessages,
-		"bbb/send_chat_message": bbb.SendChatMessage,
+		"bbb/get_all_messages":       bbb.GetAllMessages,
+		"bbb/send_chat_message":      bbb.SendChatMessage,
 	}
 )
 

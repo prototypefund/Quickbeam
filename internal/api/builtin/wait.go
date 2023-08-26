@@ -4,7 +4,7 @@ import "time"
 
 type WaitReturn struct {
 	Since string `json:"waited-since"`
-	For int `json:"waited-for"`
+	For   int    `json:"waited-for"`
 }
 
 func Wait(duration int) WaitReturn {
@@ -12,7 +12,7 @@ func Wait(duration int) WaitReturn {
 	time.Sleep(time.Second * time.Duration(duration))
 	res := WaitReturn{
 		Since: now.Local().String(),
-		For: duration,
+		For:   duration,
 	}
 	return res
 }

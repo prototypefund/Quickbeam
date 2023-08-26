@@ -5,25 +5,25 @@ import "testing"
 func actionArgs(name string, args DispatchArgs) DispatchArgs {
 	return DispatchArgs{
 		"action": name,
-		"args": args,
+		"args":   args,
 	}
 }
 
 func TestDispatch(t *testing.T) {
 	api := Api{}
-	tests := []struct{
-		name string
+	tests := []struct {
+		name   string
 		method string
-		args DispatchArgs
+		args   DispatchArgs
 		result interface{}
-		err bool
+		err    bool
 	}{
 		{"ping should pong", "ping", nil, "pong", false},
 		{"unknown method", "foo", nil, nil, true},
 		{"call unknown action", "call",
 			actionArgs("foo", make(DispatchArgs)), nil, true},
 	}
-	for _, tt := range(tests) {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := api.Dispatch(tt.method, tt.args)
 			if tt.err && err == nil {

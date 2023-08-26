@@ -82,7 +82,7 @@ func (a *Api) appendDependencies(argList []reflect.Value, function interface{}, 
 	return argList, nil
 }
 
-func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface {}, err error) {
+func (a *Api) dispatchFunc(f interface{}, arguments map[string]interface{}) (res interface{}, err error) {
 	if err := assertDispatchable(f); err != nil {
 		return nil, err
 	}

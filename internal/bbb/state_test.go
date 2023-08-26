@@ -7,7 +7,7 @@ import (
 )
 
 func stateActive(states []string, state string) bool {
-	for _, s := range(states) {
+	for _, s := range states {
 		if state == s {
 			return true
 		}

@@ -7,7 +7,7 @@ import (
 )
 
 type Browser struct {
-	url string
+	url  string
 	Page *rod.Page
 }
 
@@ -21,10 +21,10 @@ func New(url string) *Browser {
 		Permissions: []proto.BrowserPermissionType{
 			proto.BrowserPermissionTypeAudioCapture,
 		},
-		Origin: "",
+		Origin:           "",
 		BrowserContextID: "",
 	}
 	perms.Call(page)
 
-	return &Browser{url, page,}
+	return &Browser{url, page}
 }

@@ -1,4 +1,5 @@
 package rod
+
 import (
 	"errors"
 
@@ -10,7 +11,7 @@ import (
 
 type RodWebpage struct {
 	browser *rod.Browser
-	page *rod.Page
+	page    *rod.Page
 }
 
 func New() *RodWebpage {
@@ -58,7 +59,7 @@ func (b *RodWebpage) Navigate(url string) error {
 			Permissions: []proto.BrowserPermissionType{
 				proto.BrowserPermissionTypeAudioCapture,
 			},
-			Origin: "",
+			Origin:           "",
 			BrowserContextID: "",
 		}
 		perms.Call(b.page)
@@ -82,5 +83,5 @@ func (b *RodWebpage) Forward() {
 
 func (b *RodWebpage) Root() web.Node {
 	e := b.page.MustElement(":root")
-	return &RodNode{element: e,}
+	return &RodNode{element: e}
 }

@@ -54,7 +54,7 @@ func attendanceChange(_ *bbb.Meeting) {
 
 func main() {
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt: "> ",
+		Prompt:      "> ",
 		HistoryFile: "./.quickbeam_history",
 	})
 	if err != nil {
