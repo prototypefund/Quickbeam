@@ -4,16 +4,6 @@
     const userQuerySelector = 'div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)';
     const messageQuerySelector = '[data-test="chatUserMessageText"]'
 
-    console.log("Loading extension ...");
-
-    // Check for marker; only load the script once per page.
-    if (window.quickbeam && window.quickbeam.loaded) { 
-        console.warn('Script already loaded!');
-        return; // abort early
-    }
-    window.quickbeam = new Object();
-    window.quickbeam.loaded = true;
-
     const settingScript = document.querySelector("html > body > script:not([src])");
     const settingsJSON = settingScript.text.match(/__meteor_runtime_config__ = JSON.parse\(decodeURIComponent\("(.*)"\)\)/)[1];
     const settingsMeteorRuntimeConfig = JSON.parse(decodeURIComponent(settingsJSON));
@@ -21,19 +11,6 @@
 
     // quickBeamSocket is the connection to the quickBeam server.
     var quickBeamSocket = null;
-
-    const connectQuickBeam = () => {
-      quickBeamSocket = new WebSocket("ws://localhost:18981");
-
-      // on disconnect, we will try to reconnect.
-      quickBeamSocket.onclose = function (event) {
-        console.error("quickBeamSocket closed", event);
-        // we can just try to reconnect to the quickBeam server, firefox seems to
-        // handle exponential backoff for us automatically. (does it really?)
-        connectQuickBeam();
-      };
-    };
-    connectQuickBeam();
 
     const handleChatMessage = (isPrivate, user, msg) => {
         scope = isPrivate ? "private" : "public";

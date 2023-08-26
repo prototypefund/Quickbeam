@@ -2,12 +2,14 @@ package marionette
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,21 +54,64 @@ var (
 )
 
 type Firefox struct {
-	FirefoxPath string
-	Profile string
-	ProfilePath string
-	Headless bool
-	client *marionette_client.Client
-	transport *marionette_client.MarionetteTransport
-	process *os.Process
-	stdout io.ReadCloser
-	stderr io.ReadCloser
-	emptyTab bool
-	websocketErrors chan error
+	FirefoxPath       string
+	Profile           string
+	ProfilePath       string
+	Headless          bool
+	client            *marionette_client.Client
+	transport         *marionette_client.MarionetteTransport
+	process           *os.Process
+	stdout            io.ReadCloser
+	stderr            io.ReadCloser
+	emptyTab          bool
+	websocketErrors   chan error
+	websocketPort     string
+	nodeSubscriptions nodeSubscriptions
+}
+
+type nodeSubscriptions struct {
+	nextId        int
+	subscriptions map[int]chan web.SubtreeChange
+}
+
+func newSubscriber() nodeSubscriptions {
+	return nodeSubscriptions{
+		subscriptions: make(map[int]chan web.SubtreeChange),
+	}
+}
+
+func (s *nodeSubscriptions) get(id int) (chan web.SubtreeChange, error) {
+	c, found := s.subscriptions[id]
+	if !found {
+		return nil, protocol.InternalError(
+			fmt.Sprintf("Received change for unknown subscription %d", id))
+	}
+	return c, nil
+}
+
+func (s *nodeSubscriptions) new(node *Node) (id int, c chan web.SubtreeChange) {
+	s.nextId += 1
+	id = s.nextId
+	c = make(chan web.SubtreeChange, 0)
+	s.subscriptions[id] = c
+	subscribeSubtree(node, id)
+	return id, c
+}
+
+//go:embed subscribeNode.js
+var subscribeJs []byte
+
+func subscribeSubtree(n *Node, id int) {
+	idStr := strconv.Itoa(id)
+	args := []interface{}{n, idStr}
+	n.client.ExecuteScript(string(subscribeJs), args, 1000, false)
+	log.Println("SubscribeSubtree")
 }
 
 func NewFirefox() *Firefox {
-	return &Firefox{}
+	return &Firefox{
+		nodeSubscriptions: newSubscriber(),
+	}
 }
 
 func (f *Firefox) Start() (err error) {
@@ -106,9 +151,8 @@ func (f *Firefox) Running() bool {
 	return f.client != nil && f.process != nil
 }
 
-
 func (f *Firefox) NewPage() (res web.Page, err error) {
-	page := Page{client: f.client,}
+	page := Page{firefox: f, client: f.client}
 	if f.emptyTab {
 		page.pageName, err = f.client.GetWindowHandle()
 	} else {
@@ -128,7 +172,6 @@ func (f *Firefox) NewPage() (res web.Page, err error) {
 	return &page, nil
 }
 
-
 func start(f *Firefox, shell cmdExecuter) (err error) {
 	err = initFirefoxSettings(f, shell)
 	if err != nil {
@@ -142,9 +185,9 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 		return err
 	}
 	f.startWebsocketServer()
-	go func () {
+	go func() {
 		for {
-			err := <- f.websocketErrors
+			err := <-f.websocketErrors
 			log.Println(err)
 		}
 	}()
@@ -154,7 +197,7 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 		if err != nil {
 			return err
 		}
-		//err = f.injectJavascript()
+		//err = f.initJavascript()
 		//err = f.LoadExtension()
 		if err != nil {
 			return err
@@ -290,7 +333,6 @@ func setFirefoxPreference(client *marionette_client.Client, key string, value st
 	client.ExecuteScript(script, args, 1000, false)
 	client.SetContext(marionette_client.CONTENT)
 }
-
 
 func responseDecoder(response *marionette_client.Response) *json.Decoder {
 	value := bytes.NewBuffer([]byte(response.Value))

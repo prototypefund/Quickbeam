@@ -7,7 +7,7 @@ import (
 )
 
 type testExecuter struct {
-	Result string
+	Result  string
 	Command string
 }
 
@@ -30,10 +30,10 @@ func TestStart(t *testing.T) {
 
 func TestInitFirefoxSettings(t *testing.T) {
 	testCases := []struct {
-		firefox *Firefox
-		executer *testExecuter
+		firefox         *Firefox
+		executer        *testExecuter
 		reportedCommand string
-		errCode uint16
+		errCode         uint16
 	}{
 		{
 			&Firefox{},

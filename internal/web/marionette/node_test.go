@@ -18,5 +18,5 @@ func TestNode(t *testing.T) {
 	page, _ := firefox.NewPage()
 	web.SubnodeTester(page, t)
 	web.MaybeSubnodeTester(page, t)
-	//web.InteractionTester(page, t)
+	web.InteractionTester(page, t)
 }

@@ -1,6 +1,7 @@
 package web
 
-type ErrNotFound struct {}
+type ErrNotFound struct{}
+
 func (_ ErrNotFound) Error() string {
 	return "Element was not found on webpage"
 }
@@ -17,7 +18,9 @@ type Page interface {
 	Back()
 	Forward()
 	Root() (Noder, error)
+	// only keep one of them:
 	Execute(js string) (string, error)
+	Exec(js string, args []interface{}) (string, error)
 }
 
 type SubtreeChange interface {
@@ -25,20 +28,31 @@ type SubtreeChange interface {
 	//Node() Node
 }
 
+func (_ *ChildlistChange) isSubtreeChange() {}
+
+// func (c *NodeAdded) Node() Node {return c.node}
+type ChildlistChange struct {
+	Additions int
+	Removals  int
+}
+
 func (_ *NodeAdded) isSubtreeChange() {}
-//func (c *NodeAdded) Node() Node {return c.node}
+
+// func (c *NodeAdded) Node() Node {return c.node}
 type NodeAdded struct {
 	Data interface{}
 }
 
 func (_ *NodeRemoved) isSubtreeChange() {}
-//func (c *NodeRemoved) Node() Node {return c.node}
+
+// func (c *NodeRemoved) Node() Node {return c.node}
 type NodeRemoved struct {
 	Data interface{}
 }
 
 func (_ *UnknownChange) isSubtreeChange() {}
-//func (c *UnknownChange) Node() Node {return c.node}
+
+// func (c *UnknownChange) Node() Node {return c.node}
 type UnknownChange struct {
 	Data interface{}
 }

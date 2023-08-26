@@ -10,6 +10,7 @@ import (
 
 //go:embed test/index.html
 var indexHtml []byte
+
 //go:embed test/index.js
 var indexJs []byte
 
@@ -35,10 +36,10 @@ func setupTest() (url string, destruct func()) {
 
 func subset(a []string, b []string) bool {
 	var counts = make(map[string]int)
-	for _, value := range(a) {
+	for _, value := range a {
 		counts[value] += 1
 	}
-	for _, value := range(b) {
+	for _, value := range b {
 		count, found := counts[value]
 		if !found {
 			return false
@@ -117,15 +118,22 @@ func InteractionTester(webpage Page, t *testing.T) {
 	quit := make(chan bool)
 	go func() {
 		time.Sleep(time.Second * 1)
-		quit<- true
+		//quit<- true
 	}()
 
 	for i := 0; i < 5; i++ {
 		_ = button.Click()
 	}
+	go func() {
+		quit <- true
+	}()
 
 	changes := make([]SubtreeChange, 0)
-	collect:
+	// for i := 0; i < 5; i++ {
+	//	change := <- c
+	//	changes = append(changes, change)
+	// }
+collect:
 	for {
 		select {
 		case change := <-c:
@@ -139,11 +147,19 @@ func InteractionTester(webpage Page, t *testing.T) {
 		t.Errorf("SubscribeSubtree: Wrong number of changes: %d, wanted 5", len(changes))
 		return
 	}
-	if _, ok := changes[0].(*NodeAdded); !ok {
-		t.Errorf("First change not an addition: %T", changes[0])
+	if c, ok := changes[0].(*ChildlistChange); !ok {
+		t.Errorf("First change not a ChildlistChange: %T", changes[0])
+	} else {
+		if c.Removals >= c.Additions {
+			t.Errorf("First change is not an addition: %v", changes[0])
+		}
 	}
-	if _, ok := changes[2].(*NodeRemoved); !ok {
-		t.Errorf("Third change not a removal: %T", changes[2])
+	if c, ok := changes[2].(*ChildlistChange); !ok {
+		t.Errorf("Third change not a ChildlistChange: %T", changes[2])
+	} else {
+		if c.Additions > 0 {
+			t.Errorf("Third change is not a removal: %v", changes[2])
+		}
 	}
 
 }

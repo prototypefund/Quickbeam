@@ -11,7 +11,8 @@ import (
 
 type Page struct {
 	pageName string
-	client *marionette_client.Client
+	client   *marionette_client.Client
+	firefox  *Firefox
 }
 
 func (p *Page) activate() (err error) {
@@ -39,7 +40,12 @@ func (p *Page) Navigate(url string) (err error) {
 		log.Printf("marionette.Page.Navigate: %v", err)
 		return
 	}
-	_, err = p.Execute(string(chatJs))
+	//_, err = p.Execute(string(chatJs))
+	err = p.firefox.initJavascript()
+	if err != nil {
+		log.Printf("marionette.Page.Navigate: %v", err)
+		return
+	}
 	return
 }
 
@@ -54,7 +60,8 @@ func (p *Page) Forward() {
 }
 
 func (p *Page) Root() (web.Noder, error) {
-	found, roots, err := waitForElements(p.client, "body", "", "", time.Second * time.Duration(10))
+	spawner := newSpawner(p.client, &p.firefox.nodeSubscriptions)
+	found, roots, err := waitForElements(spawner, p.client, "body", "", "", time.Second*time.Duration(10))
 	if err != nil || !found {
 		return nil, errors.New("Could not find root node")
 	}
