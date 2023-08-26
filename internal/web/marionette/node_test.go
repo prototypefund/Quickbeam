@@ -12,7 +12,7 @@ func TestNode(t *testing.T) {
 	}
 	t.Log("TestNode")
 	firefox := NewFirefox()
-	firefox.Headless = false
+	firefox.Headless = true
 	firefox.Start()
 	defer firefox.Quit()
 	page, _ := firefox.NewPage()

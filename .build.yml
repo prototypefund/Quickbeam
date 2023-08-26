@@ -3,6 +3,7 @@ packages:
   - go
   - hut
   - zip
+  - firefox
 sources:
   - https://git.sr.ht/~michl/quickbeam
 oauth: git.sr.ht/OBJECTS:RW git.sr.ht/REPOSITORIES:RO git.sr.ht/PROFILE:RO
@@ -10,6 +11,9 @@ tasks:
   - build: |
       cd quickbeam
       make build
+  - test: |
+      cd quickbeam
+      make check
   - publish: |
       cd quickbeam
       tag=$(git describe --exact-match 2>/dev/null || true)

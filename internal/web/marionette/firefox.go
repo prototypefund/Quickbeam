@@ -213,7 +213,11 @@ func start(f *Firefox, shell cmdExecuter) (err error) {
 // profile via the --CreateProfile command line switch. But sometimes that fails for unkown reasons. If it does, we use
 // a path in ~/.mozilla/firefox/ as profile and hope it works.
 func createFirefoxProfile(f *Firefox, shell cmdExecuter) {
-	output := shell.ExecOrEmpty(fmt.Sprintf("%s --CreateProfile %s", f.FirefoxPath, f.Profile))
+	var headless string
+	if f.Headless {
+		headless = " --headless"
+	}
+	output := shell.ExecOrEmpty(fmt.Sprintf("%s --CreateProfile %s%s", f.FirefoxPath, f.Profile, headless))
 	if output == "Error creating profile." {
 		f.Profile = ""
 		f.ProfilePath = getFirefoxProfilePath()

@@ -20,7 +20,7 @@ func TestState(t *testing.T) {
 		t.Skip("do not launch firefox in short mode.")
 	}
 	firefox := marionette.NewFirefox()
-	firefox.Headless = false
+	firefox.Headless = true
 	firefox.Start()
 	defer firefox.Quit()
 	page, _ := firefox.NewPage()
