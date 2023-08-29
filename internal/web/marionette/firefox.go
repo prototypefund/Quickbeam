@@ -59,7 +59,7 @@ type Firefox struct {
 	ProfilePath       string
 	Headless          bool
 	client            *marionette_client.Client
-	transport         *marionette_client.MarionetteTransport
+	transport         marionette_client.Transporter
 	process           *os.Process
 	stdout            io.ReadCloser
 	stderr            io.ReadCloser
@@ -271,7 +271,7 @@ func startMarionette(f *Firefox) (err error) {
 	connected := false
 	start := time.Now()
 	for time.Since(start) < 30*time.Second {
-		f.transport = &marionette_client.MarionetteTransport{}
+		f.transport = newTransport()
 		f.client = marionette_client.NewClient()
 		f.client.Transport(f.transport)
 		err := f.client.Connect("127.0.0.1", 2828)

@@ -189,3 +189,24 @@ collect:
 	}
 
 }
+
+func ParallelTester(t *testing.T, page Page) {
+	url, closer := setupTest()
+	defer closer()
+	page.Navigate(url)
+
+	script := `return (async function delayed() { await new Promise(r => setTimeout(r, 500)); return "42" })();`
+	delayedReturn := make(chan string)
+	go func() {
+		r, err := page.Execute(script)
+		assert.Nil(t, err)
+		delayedReturn <- r
+	}()
+	root, _ := page.Root()
+	heading, _ := root.SubNode("h1", "")
+	actualText, _ := heading.Text()
+	assert.Equal(t, "Hello, world!", actualText)
+	got := <- delayedReturn
+	assert.Equal(t, "42", got)
+}
+b
