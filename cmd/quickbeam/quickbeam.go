@@ -11,11 +11,18 @@ import (
 	"syscall"
 
 	"git.sr.ht/~michl/quickbeam/internal/api"
+	"git.sr.ht/~michl/quickbeam/internal/bbb"
 	"git.sr.ht/~michl/quickbeam/internal/web/marionette"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-var a api.Api = api.Api{}
+var bbbChatMessages = api.Collection{
+	Identifier: "bbb/chat_message",
+	GetAllMembers: bbb.ChatAllMessages,
+	Subscribe: bbb.ChatSubscribeMessages,
+}
+
+var a = api.New()
 
 type myReadWriteCloser struct {
 	in  io.ReadCloser
@@ -102,6 +109,16 @@ func main() {
 			os.Exit(0)
 		}
 	}()
+	a.RegisterCollection(bbbChatMessages)
+	a.RegisterAction("bbb/join", bbb.Join)
+	a.RegisterAction("bbb/yes", bbb.Yes)
+	a.RegisterAction("bbb/toggle_mute", bbb.ToggleMute)
+	a.RegisterAction("bbb/toggle_raise_hand", bbb.ToggleRaisedHand)
+	a.RegisterAction("bbb/leave", bbb.Leave)
+	a.RegisterAction("bbb/attendees", bbb.GetAttendees)
+	a.RegisterAction("bbb/wait_attendance_change", bbb.WaitAttendanceChange)
+	a.RegisterAction("bbb/send_chat_message", bbb.SendChatMessage)
+	a.RegisterAction("bbb/log_user_list", bbb.LogUserList)
 
 	stdInOutCloser := &myReadWriteCloser{
 		in:  os.Stdin,
@@ -110,5 +127,11 @@ func main() {
 	stdInOutStream := jsonrpc2.NewBufferedStream(stdInOutCloser, jsonrpc2.VSCodeObjectCodec{})
 	handler := jsonrpc2.AsyncHandler(jsonrpc2.HandlerWithError(handlerFunc))
 	conn := jsonrpc2.NewConn(context.TODO(), stdInOutStream, handler, func(_ *jsonrpc2.Conn) {})
+	a.CallBack = func(method string, params interface{}) {
+		err := conn.Notify(context.TODO(), method, params)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 	<-conn.DisconnectNotify()
 }

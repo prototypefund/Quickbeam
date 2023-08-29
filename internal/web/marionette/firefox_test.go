@@ -20,14 +20,13 @@ func TestStart(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Do not start Firefox in short mode")
 	}
-	ff := &Firefox{
-		Headless: true,
-	}
+	ff := NewFirefox()
+	ff.Headless = true
 	err := start(ff, cmdExecute{})
 	if err != nil {
 		t.Error(err)
 	}
-	ff.process.Kill()
+	ff.Quit()
 }
 
 func TestInitFirefoxSettings(t *testing.T) {

@@ -3,22 +3,24 @@ package api
 import (
 	"fmt"
 	"reflect"
-
-	"git.sr.ht/~michl/quickbeam/internal/bbb"
 )
 
-var (
-	stateModules map[string]interface{} = map[string]interface{}{
-		"bbb": bbb.State,
-	}
-)
+type StateModule struct {
+	Identifier string
+	Function interface{}
+}
+
+func (a *Api) RegisterState(identifier string, function interface{}) {
+	state := StateModule{identifier, function}
+	a.states[identifier] = state
+}
 
 type StateReturn struct {
 	States []string `json:"states"`
 }
 
 func (a *Api) getState(app string) (res []string, err error) {
-	stateFunc, ok := stateModules[app]
+	stateFunc, ok := a.states[app]
 	if !ok {
 		return nil, AppNotAvailable{app}
 	}

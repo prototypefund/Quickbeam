@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"git.sr.ht/~michl/quickbeam/internal/api"
 	"git.sr.ht/~michl/quickbeam/internal/protocol"
 	"git.sr.ht/~michl/quickbeam/internal/web"
 )
@@ -159,7 +160,7 @@ func parseMessageNode(node web.Noder, scope ChatScope) (msg ChatMessage, err err
 	}, nil
 }
 
-func getScopeMessages(root web.Noder, button web.Noder) (messages []ChatMessage, err error) {
+func getScopeMessages(root web.Noder, button web.Noder) (messages []interface{}, err error) {
 	t, err := button.Text()
 	if err != nil {
 		return
@@ -205,12 +206,16 @@ func getScopeMessages(root web.Noder, button web.Noder) (messages []ChatMessage,
 	return
 }
 
-func collectChatMessages(root web.Noder) (messages []ChatMessage, err error) {
+func collectChatMessages(root web.Noder) (messages []interface{}, err error) {
 	chatButtons, err := root.SubNodes("div#chat-toggle-button")
 	if err != nil {
 		return
 	}
+	log.Printf("number of buttons: %d\n", len(chatButtons))
 	for _, button := range chatButtons {
+		button.LogToConsole("chatbutton")
+		t, err := button.Text()
+		log.Printf("button.Text: %s, %s\n", t, err)
 		scopeMessages, err := getScopeMessages(root, button)
 		if err != nil {
 			return messages, err
@@ -220,7 +225,7 @@ func collectChatMessages(root web.Noder) (messages []ChatMessage, err error) {
 	return
 }
 
-func GetAllMessages(_ EmptyArgs, page web.Page) (resp GetAllMessagesReturn, err error) {
+func ChatAllMessages(_ EmptyArgs, page web.Page) (res api.CollectionGetFunctionResult, err error) {
 	root, err := page.Root()
 	if err != nil {
 		return
@@ -231,10 +236,41 @@ func GetAllMessages(_ EmptyArgs, page web.Page) (resp GetAllMessagesReturn, err 
 		return
 	}
 
-	return GetAllMessagesReturn{
-		Messages: messages,
-		Count:    len(messages),
+	return api.CollectionGetFunctionResult{
+		Members: messages,
 	}, nil
+}
+
+func ChatSubscribeMessages(_ EmptyArgs, page web.Page) (res api.CollectionSubsribeFunctionResult, err error) {
+	log.Println("ChatSubscribeMessage")
+	root, err := page.Root()
+	if err != nil {
+		return
+	}
+	log.Println("Got root")
+	userList, err := getUserList(root)
+	if err != nil {
+		return
+	}
+	log.Println("Got userList")
+	subtreeChanges, err := userList.SubscribeSubtree()
+	if err != nil {
+		return
+	}
+	log.Println("Subscribed")
+	returnedTicks := make(chan interface{})
+	res.Channel = returnedTicks
+	go func() {
+		for {
+			log.Println("Waiting for change")
+			<- subtreeChanges
+			log.Println("Received change")
+			returnedTicks <- struct{}{}
+			log.Println("Sent struct")
+		}
+	}()
+	log.Println("Launched go routine")
+	return
 }
 
 type jsonChatMessage struct {
@@ -304,11 +340,18 @@ func LogUserList(_ EmptyArgs, page web.Page) (res EmptyResult, err error) {
 	args := []interface{}{
 		userList,
 	}
+	_, err = root.SubscribeSubtree()
+	if err != nil {
+		return
+	}
 	_, err = page.Exec(`console.log("hello eins");console.log(arguments[0]);`, args)
 	if err != nil {
 		return
 	}
 	_, err = page.Exec(`console.log("hello zwei!");`, args)
+	if err != nil {
+		return
+	}
 	return
 }
 

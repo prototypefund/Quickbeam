@@ -17,5 +17,5 @@ console.log("subscribe");
         }
     };
     const observer = new MutationObserver(callback);
-    observer.observe(node, { childList: true, subtree: false });
+    observer.observe(node, { childList: true, subtree: true });
 })(arguments[0], arguments[1]);

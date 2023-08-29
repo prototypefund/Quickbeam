@@ -1,10 +1,11 @@
 package marionette
 
 import (
-	"errors"
+	"encoding/json"
 	"log"
 	"time"
 
+	"git.sr.ht/~michl/quickbeam/internal/protocol"
 	"git.sr.ht/~michl/quickbeam/internal/web"
 	"github.com/njasm/marionette_client"
 )
@@ -62,8 +63,11 @@ func (p *Page) Forward() {
 func (p *Page) Root() (web.Noder, error) {
 	spawner := newSpawner(p.client, &p.firefox.nodeSubscriptions)
 	found, roots, err := waitForElements(spawner, p.client, "body", "", "", time.Second*time.Duration(10))
-	if err != nil || !found {
-		return nil, errors.New("Could not find root node")
+	if err != nil {
+		return nil, protocol.EnvironmentError(err.Error())
+	}
+	if !found {
+		return nil, protocol.CallerEnvironmentError("Could not find root node")
 	}
 	return roots[0], nil
 }
@@ -74,7 +78,14 @@ func (p *Page) Execute(js string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return r.Value, nil
+	msg := struct{
+		Value string `json:"value"`
+	}{}
+	err = json.Unmarshal([]byte(r.Value), &msg)
+	if err != nil {
+		return "", err
+	}
+	return msg.Value, nil
 }
 
 func (p *Page) Exec(js string, args []interface{}) (string, error) {

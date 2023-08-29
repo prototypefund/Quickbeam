@@ -31,7 +31,7 @@ func (n *Node) SubNode(selector string, regexp string) (node web.Noder, err erro
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		err = protocol.WebpageError(
+		err = protocol.CallerWebpageError(
 			fmt.Sprintf("Element with '%s' and regex '%s' not found",
 				selector, regexp))
 		return nil, err
@@ -105,6 +105,12 @@ func (n Node) MarshalJSON() ([]byte, error) {
 	return json.Marshal(value)
 }
 
+func (n Node) LogToConsole(prefix  string) {
+	args := []interface{}{ n }
+	script := fmt.Sprintf("console.log(\"%s: \"arguments[0]);", prefix)
+	n.client.ExecuteScript(script, args, 1000, false)
+}
+
 var _ web.Noder = &Node{}
 
 // nodeSpawner is a helper struct for the creation of a new Node.
@@ -155,7 +161,6 @@ func findElements(parent elementsFinder, spawner nodeSpawner, selector string, r
 	if err != nil {
 		return res, err
 	}
-	res = make([]web.Noder, 0)
 	for _, e := range elements {
 		if re != "" {
 			text := []byte(e.Text())

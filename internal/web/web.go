@@ -67,4 +67,8 @@ type Noder interface {
 	Click() error
 	SendKeys(sequence string) error
 	Attribute(name string) (string, bool, error)
+	// LogToConsole logs the node to the browser console.
+	// It is meant for debugging DOM elements and selectors.
+	// It ignores potential errors.
+	LogToConsole(prefix string)
 }

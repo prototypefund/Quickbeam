@@ -16,7 +16,7 @@ func TestNode(t *testing.T) {
 	firefox.Start()
 	defer firefox.Quit()
 	page, _ := firefox.NewPage()
-	web.SubnodeTester(page, t)
-	web.MaybeSubnodeTester(page, t)
-	web.InteractionTester(page, t)
+	web.SubnodeTester(t, page)
+	web.MaybeSubnodeTester(t, page)
+	web.InteractionTester(t, page)
 }

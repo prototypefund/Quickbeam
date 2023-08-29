@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //go:embed test/index.html
@@ -52,7 +54,7 @@ func subset(a []string, b []string) bool {
 	return true
 }
 
-func NavigateTester(webpage Page, t *testing.T) {
+func NavigateTester(t *testing.T, webpage Page) {
 	url, closer := setupTest()
 	defer closer()
 	webpage.Navigate(url)
@@ -63,7 +65,28 @@ func NavigateTester(webpage Page, t *testing.T) {
 	}
 }
 
-func SubnodeTester(webpage Page, t *testing.T) {
+func ExecuteTester(t *testing.T, page Page) {
+	testCases := []struct{
+		js string
+		expected string
+		error bool
+	}{
+		{`return "hello"`, "hello", false},
+		{`const a = 1 + 2;`, "", false},
+	}
+	for i, test := range testCases {
+		got, err := page.Execute(test.js)
+		if (err != nil) && !test.error {
+			t.Errorf("Expected no error but got: %s for case %d", err, i)
+		}
+		if (err == nil) && test.error {
+			t.Errorf("Expected error, got nil for case %d", i)
+		}
+		assert.Equal(t, test.expected, got)
+	}
+}
+
+func SubnodeTester(t *testing.T, webpage Page) {
 	url, closer := setupTest()
 	defer closer()
 	webpage.Navigate(url)
@@ -97,7 +120,7 @@ func SubnodeTester(webpage Page, t *testing.T) {
 	}
 }
 
-func MaybeSubnodeTester(webpage Page, t *testing.T) {
+func MaybeSubnodeTester(t *testing.T, webpage Page) {
 	url, closer := setupTest()
 	defer closer()
 	webpage.Navigate(url)
@@ -109,9 +132,12 @@ func MaybeSubnodeTester(webpage Page, t *testing.T) {
 	}
 }
 
-func InteractionTester(webpage Page, t *testing.T) {
-	root, _ := webpage.Root()
+func InteractionTester(t *testing.T, webpage Page) {
+	url, closer := setupTest()
+	defer closer()
+	webpage.Navigate(url)
 
+	root, _ := webpage.Root()
 	button, _ := root.SubNode("button", "")
 	changingList, _ := root.SubNode("#changingList", "")
 	c, _ := changingList.SubscribeSubtree()

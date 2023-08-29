@@ -6,8 +6,15 @@ import (
 	"reflect"
 
 	"git.sr.ht/~michl/quickbeam/internal/api/builtin"
+	"git.sr.ht/~michl/quickbeam/internal/protocol"
 	"git.sr.ht/~michl/quickbeam/internal/web"
 )
+
+var (
+	callbackTypeCollectionChange = "collection_change"
+)
+
+type EmptyArgs struct {}
 
 type Dispatchable func(a Api, p interface{}) (interface{}, error)
 
@@ -115,24 +122,26 @@ func paramWrongTypeError(param string, value interface{}, expectedType string) e
 	return errors.New(fmt.Sprintf("Parameter '%s' is of type %v, not %s", param, actualType, expectedType))
 }
 
-func getArgInt(args DispatchArgs, key string) (int, error) {
-	value, ok := args[key]
-	if !ok {
-		return 0, paramMissingError(key)
-	}
-	f, ok := value.(float64)
-	if !ok {
-		return 0, paramWrongTypeError(key, value, "int")
-	}
-	res := int(f)
-	if float64(res) != f {
-		return 0, paramWrongTypeError(key, value, "int")
-	}
-	return res, nil
-}
-
 type Api struct {
 	WebPage web.Page
+	collections map[string]Collection
+	actions map[string]Action
+	states map[string]StateModule
+	nextId int
+	CallBack func(string, interface{})
+}
+
+func New() Api {
+	a := Api{
+		CallBack: func(_ string, _ interface{}) {
+			return
+		},
+		collections: make(map[string]Collection),
+		actions: make(map[string]Action),
+	}
+	a.RegisterAction("greet", greet)
+	a.RegisterCollection(tickingCollection)
+	return a
 }
 
 func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, err error) {
@@ -149,13 +158,9 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 	case "version":
 		return builtin.GetVersion(), nil
 	case "call":
-		act, ok := args["action"]
-		if !ok {
-			return nil, errors.New("Invalid call: action missing")
-		}
-		action, ok := act.(string)
-		if !ok {
-			return nil, errors.New("Invalid call: action not a string")
+		action, err := getArgString(args, "action")
+		if err != nil {
+			return nil, err
 		}
 		actionParams, ok := args["args"]
 		if !ok {
@@ -168,27 +173,59 @@ func (a *Api) Dispatch(method string, args DispatchArgs) (result interface{}, er
 		}
 		return a.dispatchAction(action, ap)
 	case "open":
-		u, ok := args["url"]
-		if !ok {
-			return nil, ParamMissingError{"url"}
-		}
-		url, ok := u.(string)
-		if !ok {
-			return nil, errors.New("url is not a string")
+		url, err := getArgString(args, "url")
+		if err != nil {
+			return nil, err
 		}
 		return nil, a.WebPage.Navigate(url)
 	case "state":
-		app, ok := args["application"]
-		if !ok {
-			return nil, ParamMissingError{"module"}
-		}
-		application, ok := app.(string)
-		if !ok {
-			return nil, errors.New("application is not a string")
+		application, err := getArgString(args, "application")
+		if err != nil {
+			return nil, err
 		}
 		return a.getState(application)
+	case "fetch":
+		collection, err := getArgString(args, "collection")
+		if err != nil {
+			return nil, err
+		}
+		return a.fetchCollection(collection)
+	case "subscribe":
+		collection, err := getArgString(args, "collection")
+		if err != nil {
+			return nil, err
+		}
+		return a.subscribeCollection(collection)
 	}
 	return nil, errors.New("Unknown Method")
+}
+
+func getArgString(args DispatchArgs, key string) (string, error) {
+	v, ok := args[key]
+	if !ok {
+		return "", protocol.UserError("parameter %s is missing", key)
+	}
+	value, ok := v.(string)
+	if !ok {
+		return "", protocol.UserError("parameter %s is not a string", key)
+	}
+	return value, nil
+}
+
+func getArgInt(args DispatchArgs, key string) (int, error) {
+	value, ok := args[key]
+	if !ok {
+		return 0, paramMissingError(key)
+	}
+	f, ok := value.(float64)
+	if !ok {
+		return 0, paramWrongTypeError(key, value, "int")
+	}
+	res := int(f)
+	if float64(res) != f {
+		return 0, paramWrongTypeError(key, value, "int")
+	}
+	return res, nil
 }
 
 type DispatchArgs map[string]interface{}

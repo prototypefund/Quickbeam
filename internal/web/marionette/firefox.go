@@ -83,7 +83,7 @@ func newSubscriber() nodeSubscriptions {
 func (s *nodeSubscriptions) get(id int) (chan web.SubtreeChange, error) {
 	c, found := s.subscriptions[id]
 	if !found {
-		return nil, protocol.InternalError(
+		return nil, protocol.CallerInternalError(
 			fmt.Sprintf("Received change for unknown subscription %d", id))
 	}
 	return c, nil
@@ -218,7 +218,7 @@ func createFirefoxProfile(f *Firefox, shell cmdExecuter) {
 		headless = " --headless"
 	}
 	output := shell.ExecOrEmpty(fmt.Sprintf("%s --CreateProfile %s%s", f.FirefoxPath, f.Profile, headless))
-	if output == "Error creating profile." {
+	if strings.Contains(output, "Error creating profile.") {
 		f.Profile = ""
 		f.ProfilePath = getFirefoxProfilePath()
 	}

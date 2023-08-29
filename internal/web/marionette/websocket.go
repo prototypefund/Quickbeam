@@ -1,7 +1,6 @@
 package marionette
 
 import (
-	"bytes"
 	_ "embed"
 	"encoding/json"
 	"log"
@@ -98,27 +97,27 @@ func subscriptionHandler(subscriptions *nodeSubscriptions, msg []byte) {
 
 func read(conn *websocket.Conn, subscriptions *nodeSubscriptions) {
 	for {
-		_, msg, err := conn.ReadMessage()
+		_, data, err := conn.ReadMessage()
+		log.Printf("Received websocket data: %s\n", data)
 		if err != nil {
 			log.Println(err)
 			break
 		}
-		if len(msg) > 0 {
-			buf := bytes.NewBuffer(msg)
+		if len(data) > 0 {
 			message := struct {
 				Type string `json:"type"`
 			}{}
-			err := json.NewDecoder(buf).Decode(&message)
+			err := json.Unmarshal(data, &message)
 			if err != nil {
 				log.Println(err)
 			}
 			switch message.Type {
 			case "chat":
-				go ChatMessageHandler(msg)
+				go ChatMessageHandler(data)
 			case "subscription":
-				go subscriptionHandler(subscriptions, msg)
+				go subscriptionHandler(subscriptions, data)
 			default:
-				log.Printf("Unknown message type: %s in %s\n", message.Type, msg)
+				log.Printf("Unknown message type: %s in %s\n", message.Type, data)
 			}
 		}
 	}

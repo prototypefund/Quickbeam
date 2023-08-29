@@ -3,24 +3,18 @@ package api
 import (
 	"fmt"
 
-	"git.sr.ht/~michl/quickbeam/internal/bbb"
 	"git.sr.ht/~michl/quickbeam/internal/web"
 )
 
-var (
-	actions map[string]interface{} = map[string]interface{}{
-		"greet":                      greet,
-		"bbb/join":                   bbb.Join,
-		"bbb/yes":                    bbb.Yes,
-		"bbb/toggle_mute":            bbb.ToggleMute,
-		"bbb/toggle_raised_hand":     bbb.ToggleRaisedHand,
-		"bbb/leave":                  bbb.Leave,
-		"bbb/attendees":              bbb.GetAttendees,
-		"bbb/wait_attendance_change": bbb.WaitAttendanceChange,
-		"bbb/get_all_messages":       bbb.GetAllMessages,
-		"bbb/send_chat_message":      bbb.SendChatMessage,
-	}
-)
+type Action struct {
+	Identifier string
+	Function interface{}
+}
+
+func (a *Api) RegisterAction(identifier string, function interface{}) {
+	action := Action{identifier, function}
+	a.actions[identifier] = action
+}
 
 type greetParams struct {
 	Name string `json:"name"`
@@ -37,7 +31,7 @@ func greet(p greetParams, w web.Page, a *Api) (greetReturn, error) {
 }
 
 func (a *Api) dispatchAction(action string, params map[string]interface{}) (result interface{}, err error) {
-	act, ok := actions[action]
+	act, ok := a.actions[action]
 	if !ok {
 		return nil, ActionNotAvailableError{action}
 	}
