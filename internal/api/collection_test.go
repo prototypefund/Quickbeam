@@ -8,16 +8,16 @@ import (
 
 func TestSubscribe(t *testing.T) {
 	collChanged := make(chan interface{})
-	type callbackParams struct{
+	type callbackParams struct {
 		Method string
 		Params interface{}
 	}
 	callbacks := []callbackParams{}
-	getAll := func (_ EmptyArgs) (res CollectionGetFunctionResult, err error) {
+	getAll := func(_ EmptyArgs) (res CollectionGetFunctionResult, err error) {
 		res.Members = []interface{}{}
 		return
 	}
-	subscribe := func (_ EmptyArgs) (res CollectionSubsribeFunctionResult, err error) {
+	subscribe := func(_ EmptyArgs) (res CollectionSubsribeFunctionResult, err error) {
 		res.Channel = collChanged
 		return
 	}
@@ -27,9 +27,9 @@ func TestSubscribe(t *testing.T) {
 	a := New()
 	a.CallBack = callback
 	collection := Collection{
-		Identifier: "test",
+		Identifier:    "test",
 		GetAllMembers: getAll,
-		Subscribe: subscribe,
+		Subscribe:     subscribe,
 	}
 	a.RegisterCollection(collection)
 	args := DispatchArgs{

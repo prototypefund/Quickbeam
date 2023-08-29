@@ -14,7 +14,7 @@ var (
 	callbackTypeCollectionChange = "collection_change"
 )
 
-type EmptyArgs struct {}
+type EmptyArgs struct{}
 
 type Dispatchable func(a Api, p interface{}) (interface{}, error)
 
@@ -123,12 +123,12 @@ func paramWrongTypeError(param string, value interface{}, expectedType string) e
 }
 
 type Api struct {
-	WebPage web.Page
+	WebPage     web.Page
 	collections map[string]Collection
-	actions map[string]Action
-	states map[string]StateModule
-	nextId int
-	CallBack func(string, interface{})
+	actions     map[string]Action
+	states      map[string]StateModule
+	nextId      int
+	CallBack    func(string, interface{})
 }
 
 func New() Api {
@@ -137,7 +137,7 @@ func New() Api {
 			return
 		},
 		collections: make(map[string]Collection),
-		actions: make(map[string]Action),
+		actions:     make(map[string]Action),
 	}
 	a.RegisterAction("greet", greet)
 	a.RegisterCollection(tickingCollection)

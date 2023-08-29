@@ -66,10 +66,10 @@ func NavigateTester(t *testing.T, webpage Page) {
 }
 
 func ExecuteTester(t *testing.T, page Page) {
-	testCases := []struct{
-		js string
+	testCases := []struct {
+		js       string
 		expected string
-		error bool
+		error    bool
 	}{
 		{`return "hello"`, "hello", false},
 		{`const a = 1 + 2;`, "", false},
@@ -206,6 +206,6 @@ func ParallelTester(t *testing.T, page Page) {
 	heading, _ := root.SubNode("h1", "")
 	actualText, _ := heading.Text()
 	assert.Equal(t, "Hello, world!", actualText)
-	got := <- delayedReturn
+	got := <-delayedReturn
 	assert.Equal(t, "42", got)
 }

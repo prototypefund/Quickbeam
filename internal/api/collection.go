@@ -8,9 +8,9 @@ import (
 )
 
 type Collection struct {
-	Identifier string
+	Identifier    string
 	GetAllMembers interface{}
-	Subscribe interface{}
+	Subscribe     interface{}
 }
 
 type CollectionGetFunctionResult struct {
@@ -58,10 +58,10 @@ func (a *Api) subscribeCollection(collection string) (res SubscribeCollectionRes
 	identifier := a.NextIdentifier()
 	go func() {
 		for {
-			<- c
+			<-c
 			message := CollectionChangedParams{
 				Collection: collection,
-				Id: identifier,
+				Id:         identifier,
 			}
 			a.CallBack(callbackTypeCollectionChange, message)
 		}
@@ -73,7 +73,7 @@ func (a *Api) subscribeCollection(collection string) (res SubscribeCollectionRes
 
 type CollectionChangedParams struct {
 	Collection string `json:"collection"`
-	Id string `json:"id"`
+	Id         string `json:"id"`
 }
 
 func (a *Api) getCollection(identifier string) (Collection, error) {
@@ -107,7 +107,7 @@ func subscribeTicking(_ EmptyArgs) (res CollectionSubsribeFunctionResult, err er
 		ticker = time.NewTicker(time.Second * 3)
 		go func() {
 			for {
-				t := <- ticker.C
+				t := <-ticker.C
 				times := []string{t.Format(time.RFC822)}
 				l := len(ticks)
 				if l > 9 {
@@ -130,7 +130,7 @@ var ticker *time.Ticker
 var ticks []string
 var tickChannels []chan interface{}
 var tickingCollection = Collection{
-	Identifier: "test/tick",
+	Identifier:    "test/tick",
 	GetAllMembers: getTickingMembers,
-	Subscribe: subscribeTicking,
+	Subscribe:     subscribeTicking,
 }

@@ -78,7 +78,7 @@ func (p *Page) Execute(js string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	msg := struct{
+	msg := struct {
 		Value string `json:"value"`
 	}{}
 	err = json.Unmarshal([]byte(r.Value), &msg)

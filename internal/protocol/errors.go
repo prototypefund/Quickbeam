@@ -8,72 +8,72 @@ import (
 
 func InternalError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(0),
-		Code: 10000,
+		Code:   10000,
 	}
 }
 
 func CallerInternalError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(1),
-		Code: 10000,
+		Code:   10000,
 	}
 }
 
 func ConfigurationError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(0),
-		Code: 20000,
+		Code:   20000,
 	}
 }
 
 func EnvironmentError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(0),
-		Code: 30000,
+		Code:   30000,
 	}
 }
 
 func CallerEnvironmentError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(1),
-		Code: 30000,
+		Code:   30000,
 	}
 }
 
 func WebpageError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(0),
-		Code: 40000,
+		Code:   40000,
 	}
 }
 
 func CallerWebpageError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(1),
-		Code: 40000,
+		Code:   40000,
 	}
 }
 
 func UserError(msg string, args ...interface{}) error {
 	return QuickbeamError{
-		Msg:  fmt.Sprintf(msg, args...),
+		Msg:    fmt.Sprintf(msg, args...),
 		Caller: caller(0),
-		Code: 50000,
+		Code:   50000,
 	}
 }
 
 type QuickbeamError struct {
-	Msg  string
+	Msg    string
 	Caller string
-	Code uint16
+	Code   uint16
 }
 
 func (e QuickbeamError) Error() string {

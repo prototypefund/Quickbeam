@@ -263,7 +263,7 @@ func ChatSubscribeMessages(_ EmptyArgs, page web.Page) (res api.CollectionSubsri
 	go func() {
 		for {
 			log.Println("Waiting for change")
-			<- subtreeChanges
+			<-subtreeChanges
 			log.Println("Received change")
 			returnedTicks <- struct{}{}
 			log.Println("Sent struct")

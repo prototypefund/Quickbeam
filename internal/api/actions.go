@@ -8,7 +8,7 @@ import (
 
 type Action struct {
 	Identifier string
-	Function interface{}
+	Function   interface{}
 }
 
 func (a *Api) RegisterAction(identifier string, function interface{}) {

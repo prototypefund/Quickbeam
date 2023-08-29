@@ -17,9 +17,9 @@ import (
 )
 
 var bbbChatMessages = api.Collection{
-	Identifier: "bbb/chat_message",
+	Identifier:    "bbb/chat_message",
 	GetAllMembers: bbb.ChatAllMessages,
-	Subscribe: bbb.ChatSubscribeMessages,
+	Subscribe:     bbb.ChatSubscribeMessages,
 }
 
 var a = api.New()

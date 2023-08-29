@@ -7,7 +7,7 @@ import (
 
 type StateModule struct {
 	Identifier string
-	Function interface{}
+	Function   interface{}
 }
 
 func (a *Api) RegisterState(identifier string, function interface{}) {
