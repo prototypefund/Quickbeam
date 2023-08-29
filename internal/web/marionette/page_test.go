@@ -21,3 +21,15 @@ func TestPage(t *testing.T) {
 	web.ExecuteTester(t, page)
 }
 
+func TestParallelOperation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("do no launch firefox in short mode.")
+	}
+	firefox := NewFirefox()
+	firefox.Headless = true
+	firefox.Start()
+	defer firefox.Quit()
+	page, err := firefox.NewPage()
+	assert.Nil(t, err)
+	web.ParallelTester(t, page)
+}
