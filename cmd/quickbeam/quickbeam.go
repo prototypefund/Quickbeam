@@ -70,7 +70,7 @@ func main() {
 	for _, arg := range os.Args {
 		switch arg {
 		case "--version":
-			fmt.Println("quickbeam v0.3")
+			fmt.Println("quickbeam v0.4")
 			os.Exit(0)
 		case "--headless":
 			headless = true
