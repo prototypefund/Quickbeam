@@ -35,5 +35,5 @@ func (a *Api) dispatchAction(action string, params map[string]interface{}) (resu
 	if !ok {
 		return nil, ActionNotAvailableError{action}
 	}
-	return a.dispatchFunc(act, params)
+	return a.dispatchFunc(act.Function, params)
 }

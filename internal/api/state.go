@@ -20,7 +20,8 @@ type StateReturn struct {
 }
 
 func (a *Api) getState(app string) (res []string, err error) {
-	stateFunc, ok := a.states[app]
+	state, ok := a.states[app]
+	stateFunc := state.Function
 	if !ok {
 		return nil, AppNotAvailable{app}
 	}

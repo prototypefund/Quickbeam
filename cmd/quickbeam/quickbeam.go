@@ -110,6 +110,7 @@ func main() {
 		}
 	}()
 	a.RegisterCollection(bbbChatMessages)
+	a.RegisterState("bbb", bbb.State)
 	a.RegisterAction("bbb/join", bbb.Join)
 	a.RegisterAction("bbb/yes", bbb.Yes)
 	a.RegisterAction("bbb/toggle_mute", bbb.ToggleMute)

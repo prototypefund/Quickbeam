@@ -138,6 +138,7 @@ func New() Api {
 		},
 		collections: make(map[string]Collection),
 		actions:     make(map[string]Action),
+		states:      make(map[string]StateModule),
 	}
 	a.RegisterAction("greet", greet)
 	a.RegisterCollection(tickingCollection)
