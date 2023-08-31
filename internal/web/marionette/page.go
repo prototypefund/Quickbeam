@@ -72,6 +72,15 @@ func (p *Page) Root() (web.Noder, error) {
 	return roots[0], nil
 }
 
+func (p *Page) Title() (string, error) {
+	p.activate()
+	title, err := p.client.Title()
+	if err != nil {
+		return "", protocol.CallerWebpageError("Could not get title: %v", err)
+	}
+	return title, err
+}
+
 func (p *Page) Execute(js string) (string, error) {
 	args := []interface{}{}
 	r, err := p.client.ExecuteScript(js, args, 10000, false)

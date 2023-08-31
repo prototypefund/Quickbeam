@@ -18,6 +18,7 @@ type Page interface {
 	Back()
 	Forward()
 	Root() (Noder, error)
+	Title() (string, error)
 	// only keep one of them:
 	Execute(js string) (string, error)
 	Exec(js string, args []interface{}) (string, error)
