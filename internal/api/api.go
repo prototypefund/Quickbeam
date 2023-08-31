@@ -15,6 +15,7 @@ var (
 )
 
 type EmptyArgs struct{}
+type EmptyReturn struct{}
 
 type Dispatchable func(a Api, p interface{}) (interface{}, error)
 
@@ -25,7 +26,7 @@ func argumentType(f interface{}, num int) reflect.Type {
 func assertDispatchable(f interface{}) error {
 	funcVal := reflect.ValueOf(f)
 	if funcVal.Kind() != reflect.Func {
-		return InternalDispatchError{"dispatchee is not a function"}
+		return protocol.CallerInternalError("dispatchee is not a function")
 	}
 	funcType := funcVal.Type()
 	if funcType.NumIn() < 1 {
