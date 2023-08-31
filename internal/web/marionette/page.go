@@ -62,7 +62,7 @@ func (p *Page) Forward() {
 
 func (p *Page) Root() (web.Noder, error) {
 	spawner := newSpawner(p.client, &p.firefox.nodeSubscriptions)
-	found, roots, err := waitForElements(spawner, p.client, "body", "", "", time.Second*time.Duration(10))
+	found, roots, err := waitForElements(spawner, p.client, "html", "", "", time.Second*time.Duration(10))
 	if err != nil {
 		return nil, protocol.EnvironmentError(err.Error())
 	}
