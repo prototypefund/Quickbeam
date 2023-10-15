@@ -1,5 +1,5 @@
 {
-  description = "A simple Go package";
+  description = "Accessibility focused APIs for web applications that lack one.";
 
   # Nixpkgs / NixOS version to use.
   inputs.nixpkgs.url = "nixpkgs/nixos-23.05";
